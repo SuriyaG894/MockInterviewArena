@@ -310,7 +310,7 @@ describe("Mock Interview Arena API Tests", () => {
   describe("Start Battle Challenge Generation", () => {
     it("should generate a dynamic challenge for a selected boss and difficulty", async () => {
       getCompletion.mockResolvedValueOnce(
-        "Design a simple payment API with basic token authentication."
+        JSON.stringify({ question: "Design a simple payment API with basic token authentication." })
       );
 
       const response = await request(app)

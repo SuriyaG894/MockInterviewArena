@@ -188,11 +188,21 @@ The question difficulty MUST match: ${difficulty.toUpperCase()}.
 - HARD: A highly complex, multi-layered problem involving scaling, race conditions, advanced failure modes, or security risks.
 
 The question must focus on: ${profile.specialties}.
-Return ONLY the question in plain text. Do not return any JSON, markdown, or conversational preambles. Keep it under 2-3 sentences.`;
+
+Return ONLY a valid JSON object matching this schema:
+{"question": "<question text under 2-3 sentences>"}
+Do not return any surrounding text, markdown, or code fences.`;
 
   try {
     const rawQuestion = await getCompletion(systemPrompt, "Please generate the question now.");
-    const challenge = rawQuestion.trim();
+    let challenge = "";
+    try {
+      const parsed = JSON.parse(rawQuestion);
+      challenge = parsed.question || parsed.challenge || rawQuestion;
+    } catch {
+      challenge = rawQuestion;
+    }
+    challenge = challenge.trim();
     
     const welcomeMessages = {
       architect: "Ah, another architect hopeful. Let me examine your structural integrity...",
