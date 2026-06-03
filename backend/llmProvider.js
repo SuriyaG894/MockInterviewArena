@@ -48,6 +48,7 @@ async function groqCompletion(systemPrompt, userMessage) {
       { role: "system", content: systemPrompt },
       { role: "user", content: userMessage },
     ],
+    response_format: { type: "json_object" },
   });
   return response.choices[0].message.content;
 }
@@ -62,6 +63,7 @@ async function localCompletion(systemPrompt, userMessage) {
       { role: "system", content: systemPrompt },
       { role: "user", content: userMessage },
     ],
+    response_format: { type: "json_object" },
   });
   return response.choices[0].message.content;
 }
