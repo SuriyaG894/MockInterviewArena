@@ -104,7 +104,7 @@ export function GameProvider({ children }) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-      const response = await fetch('http://localhost:5000/api/battle/turn', {
+      const response = await fetch('http://127.0.0.1:5000/api/battle/turn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

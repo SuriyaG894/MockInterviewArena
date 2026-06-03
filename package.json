@@ -5,5 +5,8 @@
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && node --watch index.js",
     "dev": "echo 'Run npm run dev:frontend and npm run dev:backend in separate terminals'"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }
