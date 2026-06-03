@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
-const { evaluateTurn } = require("./agent");
+const { evaluateTurn, generateChallenge } = require("./agent");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,9 +14,29 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", service: "The Mock Arena API" });
 });
 
+app.post("/api/battle/start", async (req, res) => {
+  try {
+    const { bossId, difficulty } = req.body;
+
+    if (!bossId || !difficulty) {
+      return res.status(400).json({
+        error: "bossId and difficulty are required",
+      });
+    }
+
+    const result = await generateChallenge(bossId, difficulty);
+    res.json(result);
+  } catch (error) {
+    console.error("Battle start error:", error.message);
+    res.status(500).json({
+      error: "Failed to generate challenge",
+    });
+  }
+});
+
 app.post("/api/battle/turn", async (req, res) => {
   try {
-    const { bossId, userResponse } = req.body;
+    const { bossId, userResponse, difficulty } = req.body;
 
     if (!bossId || !userResponse) {
       return res.status(400).json({
@@ -24,7 +44,7 @@ app.post("/api/battle/turn", async (req, res) => {
       });
     }
 
-    const result = await evaluateTurn(bossId, userResponse);
+    const result = await evaluateTurn(bossId, userResponse, difficulty || "medium");
     res.json(result);
   } catch (error) {
     console.error("Battle turn error:", error.message);

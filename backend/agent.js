@@ -159,7 +159,58 @@ function parseResult(raw) {
   }
 }
 
-async function evaluateTurn(bossId, userResponse) {
+const BOSS_PROFILES = {
+  architect: {
+    title: "nitpicking System Architect",
+    specialties: "system design, scalability, microservices, databases, and trade-offs"
+  },
+  cto: {
+    title: "chaotic Startup CTO",
+    specialties: "code quality, testing strategy, engineering velocity, and technical debt tradeoffs"
+  },
+  pm: {
+    title: "pedantic Product Manager",
+    specialties: "user experience, MVP strategy, roadmap prioritization, and customer-centric design"
+  },
+  qa: {
+    title: "rigorous QA Lead",
+    specialties: "edge cases, test automation, load testing, security vulnerabilities, and failure recovery"
+  }
+};
+
+async function generateChallenge(bossId, difficulty) {
+  const profile = BOSS_PROFILES[bossId] || BOSS_PROFILES.cto;
+  const systemPrompt = `You are a ${profile.title} interviewing a candidate.
+Your job is to generate a single technical interview question.
+The question difficulty MUST match: ${difficulty.toUpperCase()}.
+- EASY: A straightforward conceptual question or simple code design challenge.
+- MEDIUM: A standard, realistic interview scenario with some complexity and edge cases.
+- HARD: A highly complex, multi-layered problem involving scaling, race conditions, advanced failure modes, or security risks.
+
+The question must focus on: ${profile.specialties}.
+Return ONLY the question in plain text. Do not return any JSON, markdown, or conversational preambles. Keep it under 2-3 sentences.`;
+
+  try {
+    const rawQuestion = await getCompletion(systemPrompt, "Please generate the question now.");
+    const challenge = rawQuestion.trim();
+    
+    const welcomeMessages = {
+      architect: "Ah, another architect hopeful. Let me examine your structural integrity...",
+      cto: "Welcome to the trenches. Show me code that doesn't embarrass itself.",
+      pm: "Let's align our roadmap. Show me how you trade off engineering complexity for user value...",
+      qa: "My mission is to break your assumptions. Prove to me that your logic is bulletproof under pressure..."
+    };
+    const welcome = welcomeMessages[bossId] || "Let's begin the interview.";
+    const welcomeMessage = `${welcome}\n\nChallenge: ${challenge}`;
+
+    return { challenge, welcomeMessage };
+  } catch (error) {
+    console.error("Error generating challenge:", error.message);
+    throw error;
+  }
+}
+
+async function evaluateTurn(bossId, userResponse, difficulty = "medium") {
   if (!userResponse || typeof userResponse !== "string") {
     return {
       dialogue: "You provided an empty response. The arena expects an answer.",
@@ -168,8 +219,16 @@ async function evaluateTurn(bossId, userResponse) {
     };
   }
 
-  const systemPrompt =
+  let systemPrompt =
     BOSS_PROMPTS[bossId] || getDefaultPrompt();
+
+  systemPrompt += `
+
+DIFFICULTY SETTING: ${difficulty.toUpperCase()}
+Evaluate the candidate's answer strictly based on this difficulty setting:
+- EASY: Be highly lenient. Accept basic correct concepts. Overlook minor edge cases. If they show a general understanding, set damageTo to "boss" (damageAmount: 20-50) and damageTo to "player" only for completely incorrect answers.
+- MEDIUM: Standard grading rules. Be fair but thorough. Check for core edge cases.
+- HARD: Be extremely nitpicky, rigorous, and demanding. A correct answer is not enough; it must address advanced edge cases, security, and trade-offs. If they miss even minor edge cases or code flaws, you MUST set damageTo to "player" (damageAmount: 20-50). Only a truly comprehensive, bulletproof answer can deal damage to you (damageTo: "boss").`;
 
   try {
     const raw = await getCompletion(systemPrompt, userResponse);
@@ -185,4 +244,4 @@ async function evaluateTurn(bossId, userResponse) {
   }
 }
 
-module.exports = { evaluateTurn };
+module.exports = { evaluateTurn, generateChallenge };

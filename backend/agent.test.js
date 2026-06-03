@@ -306,4 +306,36 @@ describe("Mock Interview Arena API Tests", () => {
       });
     });
   });
+
+  describe("Start Battle Challenge Generation", () => {
+    it("should generate a dynamic challenge for a selected boss and difficulty", async () => {
+      getCompletion.mockResolvedValueOnce(
+        "Design a simple payment API with basic token authentication."
+      );
+
+      const response = await request(app)
+        .post("/api/battle/start")
+        .send({
+          bossId: "qa",
+          difficulty: "easy",
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.challenge).toBe(
+        "Design a simple payment API with basic token authentication."
+      );
+      expect(response.body.welcomeMessage).toContain("Challenge:");
+    });
+
+    it("should return 400 if bossId or difficulty is missing", async () => {
+      const response = await request(app)
+        .post("/api/battle/start")
+        .send({
+          bossId: "qa",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("bossId and difficulty are required");
+    });
+  });
 });

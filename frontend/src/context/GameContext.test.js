@@ -11,6 +11,7 @@ describe('GameContext - gameReducer State Transitions', () => {
       battleLog: [],
       isProcessing: false,
       currentChallenge: null,
+      difficulty: 'medium',
     });
   });
 
@@ -191,5 +192,11 @@ describe('GameContext - gameReducer State Transitions', () => {
     const nextState = gameReducer(state, { type: 'RESET' });
 
     expect(nextState).toEqual(initialState);
+  });
+
+  it('should set difficulty level (SET_DIFFICULTY)', () => {
+    const action = { type: 'SET_DIFFICULTY', payload: 'hard' };
+    const nextState = gameReducer(initialState, action);
+    expect(nextState.difficulty).toBe('hard');
   });
 });

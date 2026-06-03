@@ -11,6 +11,7 @@ export const initialState = {
   battleLog: [],
   isProcessing: false,
   currentChallenge: null,
+  difficulty: 'medium',
 };
 
 export function gameReducer(state, action) {
@@ -63,6 +64,12 @@ export function gameReducer(state, action) {
       };
     }
 
+    case 'SET_DIFFICULTY':
+      return {
+        ...state,
+        difficulty: action.payload,
+      };
+
     case 'RESET':
       return { ...initialState };
 
@@ -110,6 +117,7 @@ export function GameProvider({ children }) {
         body: JSON.stringify({
           bossId: gameState.selectedBoss,
           userResponse: userAnswer,
+          difficulty: gameState.difficulty,
         }),
         signal: controller.signal,
       });
@@ -139,7 +147,7 @@ export function GameProvider({ children }) {
         },
       });
     }
-  }, [gameState.selectedBoss]);
+  }, [gameState.selectedBoss, gameState.difficulty]);
 
   const value = { gameState, dispatchTurn, dispatch };
 

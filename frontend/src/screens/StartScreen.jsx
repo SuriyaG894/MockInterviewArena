@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useGame } from '../context/GameContext.jsx';
 import { BOSSES } from '../constants/bosses.js';
 
@@ -7,16 +8,42 @@ function getRandomChallenge(boss) {
 }
 
 export default function StartScreen() {
-  const { dispatch } = useGame();
+  const { gameState, dispatch } = useGame();
+  const [isStarting, setIsStarting] = useState(null);
 
-  function selectBoss(boss) {
-    const randomChallenge = getRandomChallenge(boss);
+  async function selectBoss(boss) {
+    setIsStarting(boss.id);
+    let challenge = '';
+    let welcomeMessage = '';
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/battle/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bossId: boss.id, difficulty: gameState.difficulty }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        challenge = data.challenge;
+        welcomeMessage = data.welcomeMessage;
+      }
+    } catch (err) {
+      console.warn("Failed to generate dynamic challenge, falling back to static:", err);
+    }
+
+    if (!challenge) {
+      const randomChallenge = getRandomChallenge(boss);
+      challenge = randomChallenge;
+      welcomeMessage = `${boss.welcome}\n\nChallenge: ${randomChallenge}`;
+    }
+
     dispatch({
       type: 'SET_BOSS',
       payload: boss.id,
-      welcomeMessage: `${boss.welcome}\n\nChallenge: ${randomChallenge}`,
-      challenge: randomChallenge,
+      welcomeMessage,
+      challenge,
     });
+    setIsStarting(null);
   }
 
   return (
@@ -27,7 +54,7 @@ export default function StartScreen() {
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
-      <div className="text-center z-10 max-w-2xl mb-12">
+      <div className="text-center z-10 max-w-2xl mb-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
           Interactive System Simulator v1.0
@@ -40,17 +67,53 @@ export default function StartScreen() {
         </p>
       </div>
 
+      {/* Target Difficulty Selector */}
+      <div className="z-10 flex flex-col items-center gap-3 mb-10">
+        <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+          Target Difficulty Protocol
+        </span>
+        <div className="flex p-1 rounded-xl bg-slate-950/60 border border-slate-800/80 backdrop-blur-md relative">
+          {['easy', 'medium', 'hard'].map((level) => {
+            const active = gameState.difficulty === level;
+            let activeStyle = '';
+            if (active) {
+              if (level === 'easy') activeStyle = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]';
+              else if (level === 'medium') activeStyle = 'bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]';
+              else activeStyle = 'bg-rose-500/10 border-rose-500/30 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.15)]';
+            } else {
+              activeStyle = 'border-transparent text-slate-500 hover:text-slate-300';
+            }
+            return (
+              <button
+                key={level}
+                disabled={isStarting !== null}
+                onClick={() => dispatch({ type: 'SET_DIFFICULTY', payload: level })}
+                className={`px-5 py-1.5 rounded-lg border text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${activeStyle} ${
+                  isStarting !== null ? 'opacity-40 cursor-not-allowed' : ''
+                }`}
+              >
+                {level}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Cards */}
       <div className="flex gap-8 flex-wrap justify-center z-10 max-w-4xl w-full">
         {BOSSES.map((boss) => {
           const borderHover = boss.theme?.borderHover || 'hover:border-slate-500/80 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]';
           const tagColor = boss.theme?.tagColor || 'bg-slate-950/30 text-slate-300 border-slate-500/10';
+          const cardLoading = isStarting === boss.id;
 
           return (
             <button
               key={boss.id}
               onClick={() => selectBoss(boss)}
-              className={`w-80 sm:w-92 p-6 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md flex flex-col gap-4 text-left transition-all duration-300 transform hover:-translate-y-1 cursor-pointer ${borderHover}`}
+              disabled={isStarting !== null}
+              className={`w-80 sm:w-92 p-6 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md flex flex-col gap-4 text-left transition-all duration-300 transform hover:-translate-y-1 cursor-pointer ${
+                isStarting !== null ? 'opacity-60 cursor-not-allowed' : borderHover
+              }`}
             >
               <div className="flex justify-between items-start w-full">
                 <span className="text-3xl p-2.5 bg-slate-950/50 border border-slate-850 rounded-xl shadow-inner">{boss.icon}</span>
@@ -59,30 +122,45 @@ export default function StartScreen() {
                 </span>
               </div>
 
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide">
-                  {boss.title}
-                </h2>
-                <p className="text-xs text-slate-400/80 mt-2 leading-relaxed min-h-[50px]">
-                  {boss.description}
-                </p>
-              </div>
+              {cardLoading ? (
+                <div className="flex flex-col items-center justify-center py-6 gap-2 w-full">
+                  <div className="flex gap-1.5 items-center">
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  <span className="text-[10px] font-mono text-indigo-400 uppercase tracking-widest animate-pulse">
+                    Generating protocol...
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide">
+                      {boss.title}
+                    </h2>
+                    <p className="text-xs text-slate-400/80 mt-2 leading-relaxed min-h-[50px]">
+                      {boss.description}
+                    </p>
+                  </div>
 
-              <div className="w-full h-[1px] bg-slate-800/40" />
+                  <div className="w-full h-[1px] bg-slate-800/40" />
 
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">Specialties</span>
-                <ul className="flex flex-wrap gap-1.5">
-                  {boss.specialties.map((s) => (
-                    <li
-                      key={s}
-                      className={`text-[10px] px-2.5 py-0.5 rounded border ${tagColor}`}
-                    >
-                      {s}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">Specialties</span>
+                    <ul className="flex flex-wrap gap-1.5">
+                      {boss.specialties.map((s) => (
+                        <li
+                          key={s}
+                          className={`text-[10px] px-2.5 py-0.5 rounded border ${tagColor}`}
+                        >
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
             </button>
           );
         })}
