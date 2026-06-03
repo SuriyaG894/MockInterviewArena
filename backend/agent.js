@@ -195,10 +195,17 @@ Do not return any surrounding text, markdown, or code fences.`;
 
   try {
     const rawQuestion = await getCompletion(systemPrompt, "Please generate the question now.");
+    if (!rawQuestion || typeof rawQuestion !== "string") {
+      throw new Error("Empty or invalid response received from LLM completion.");
+    }
     let challenge = "";
     try {
-      const parsed = JSON.parse(rawQuestion);
-      challenge = parsed.question || parsed.challenge || rawQuestion;
+      const parsed = JSON.parse(rawQuestion.trim());
+      if (parsed && typeof parsed === "object") {
+        challenge = parsed.question || parsed.challenge || rawQuestion;
+      } else {
+        challenge = rawQuestion;
+      }
     } catch {
       challenge = rawQuestion;
     }
@@ -226,6 +233,16 @@ async function evaluateTurn(bossId, userResponse, difficulty = "medium") {
       dialogue: "You provided an empty response. The arena expects an answer.",
       damageTo: "player",
       damageAmount: 5,
+    };
+  }
+
+  const trimmed = userResponse.trim();
+  const hasAlphanumeric = /[a-zA-Z0-9]/.test(trimmed);
+  if (trimmed.length < 5 || !hasAlphanumeric) {
+    return {
+      dialogue: "That response is too short or meaningless. Please provide a substantive answer to the challenge.",
+      damageTo: "none",
+      damageAmount: 0,
     };
   }
 

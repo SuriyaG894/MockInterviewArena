@@ -2,6 +2,37 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+// Environment Configuration Startup Validation
+const provider = process.env.LLM_PROVIDER;
+if (!provider) {
+  console.error("Initialization Error: LLM_PROVIDER is not defined in environment config.");
+  process.exit(1);
+}
+
+if (provider === "groq") {
+  if (!process.env.GROQ_API_KEY) {
+    console.error("Initialization Error: GROQ_API_KEY is not defined in environment config for provider 'groq'.");
+    process.exit(1);
+  }
+} else if (provider === "local") {
+  if (!process.env.LOCAL_LLM_ENDPOINT) {
+    console.error("Initialization Error: LOCAL_LLM_ENDPOINT is not defined in environment config for provider 'local'.");
+    process.exit(1);
+  }
+  if (!process.env.LOCAL_MODEL_NAME) {
+    console.error("Initialization Error: LOCAL_MODEL_NAME is not defined in environment config for provider 'local'.");
+    process.exit(1);
+  }
+} else if (provider === "azure") {
+  if (!process.env.AZURE_AI_AGENTS_CONNECTION_STRING) {
+    console.error("Initialization Error: AZURE_AI_AGENTS_CONNECTION_STRING is not defined in environment config for provider 'azure'.");
+    process.exit(1);
+  }
+} else {
+  console.error(`Initialization Error: Unknown LLM_PROVIDER "${provider}". Supported: 'groq', 'local', 'azure'.`);
+  process.exit(1);
+}
+
 const { evaluateTurn, generateChallenge } = require("./agent");
 
 const app = express();

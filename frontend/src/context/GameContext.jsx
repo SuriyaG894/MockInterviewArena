@@ -102,6 +102,19 @@ export function GameProvider({ children }) {
       return;
     }
 
+    const trimmed = userAnswer.trim();
+    const hasAlphanumeric = /[a-zA-Z0-9]/.test(trimmed);
+    if (trimmed.length < 5 || !hasAlphanumeric) {
+      dispatch({
+        type: 'SET_ERROR',
+        errorLogEntry: {
+          sender: 'boss',
+          text: '[System Notification: Your response is too short or meaningless. Please provide a substantive answer to the challenge.]',
+        },
+      });
+      return;
+    }
+
     dispatch({
       type: 'START_TURN',
       payload: { sender: 'player', text: userAnswer },

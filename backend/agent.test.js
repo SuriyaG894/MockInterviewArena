@@ -200,6 +200,38 @@ describe("Mock Interview Arena API Tests", () => {
       expect(response.body.error).toBe("bossId and userResponse are required");
     });
 
+    it("should return validation error dialogue and 0 damage if user response is too short or lacks alphanumeric characters", async () => {
+      const response = await request(app)
+        .post("/api/battle/turn")
+        .send({
+          bossId: "architect",
+          userResponse: ".",
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        dialogue: "That response is too short or meaningless. Please provide a substantive answer to the challenge.",
+        damageTo: "none",
+        damageAmount: 0,
+      });
+
+      const response2 = await request(app)
+        .post("/api/battle/turn")
+        .send({
+          bossId: "architect",
+          userResponse: "@#$%^&*",
+        });
+
+      expect(response2.status).toBe(200);
+      expect(response2.body).toEqual({
+        dialogue: "That response is too short or meaningless. Please provide a substantive answer to the challenge.",
+        damageTo: "none",
+        damageAmount: 0,
+      });
+
+      expect(getCompletion).not.toHaveBeenCalled();
+    });
+
     it("should handle LLM connection failure and return faltered message", async () => {
       getCompletion.mockRejectedValueOnce(new Error("Network Timeout"));
 
