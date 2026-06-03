@@ -178,18 +178,22 @@ const BOSS_PROFILES = {
   }
 };
 
-async function generateChallenge(bossId, difficulty) {
+async function generateChallenge(bossId, difficulty, candidateProfile) {
   const profile = BOSS_PROFILES[bossId] || BOSS_PROFILES.cto;
-  const systemPrompt = `You are a ${profile.title} interviewing a candidate.
+  let systemPrompt = `You are a ${profile.title} interviewing a candidate.
 Your job is to generate a single technical interview question.
 The question difficulty MUST match: ${difficulty.toUpperCase()}.
 - EASY: A straightforward conceptual question or simple code design challenge.
 - MEDIUM: A standard, realistic interview scenario with some complexity and edge cases.
 - HARD: A highly complex, multi-layered problem involving scaling, race conditions, advanced failure modes, or security risks.
 
-The question must focus on: ${profile.specialties}.
+The question must focus on: ${profile.specialties}.`;
 
-Return ONLY a valid JSON object matching this schema:
+  if (candidateProfile && typeof candidateProfile === "string" && candidateProfile.trim().length > 0) {
+    systemPrompt += `\n\nTHE CANDIDATE PROFILE / BACKGROUND:\nThe candidate claims to have this specific background:\n"${candidateProfile.trim()}"\n\nYou MUST dynamically tailor the generated question to target their claimed skills and background while strictly preserving your character persona rules. For example, if they specialize in Java and databases, ask a Java/database scaling challenge. If they specialize in QA testing, ask about quality automation bottlenecks.`;
+  }
+
+  systemPrompt += `\n\nReturn ONLY a valid JSON object matching this schema:
 {"question": "<question text under 2-3 sentences>"}
 Do not return any surrounding text, markdown, or code fences.`;
 
@@ -227,7 +231,7 @@ Do not return any surrounding text, markdown, or code fences.`;
   }
 }
 
-async function evaluateTurn(bossId, userResponse, difficulty = "medium") {
+async function evaluateTurn(bossId, userResponse, difficulty = "medium", candidateProfile) {
   if (!userResponse || typeof userResponse !== "string") {
     return {
       dialogue: "You provided an empty response. The arena expects an answer.",
@@ -257,6 +261,16 @@ Evaluate the candidate's answer strictly based on this difficulty setting:
 - MEDIUM: Standard grading rules. Be fair but thorough. Check for core edge cases.
 - HARD: Be extremely nitpicky, rigorous, and demanding. A correct answer is not enough; it must address advanced edge cases, security, and trade-offs. If they miss even minor edge cases or code flaws, you MUST set damageTo to "player" (damageAmount: 20-50). Only a truly comprehensive, bulletproof answer can deal damage to you (damageTo: "boss").`;
 
+  if (candidateProfile && typeof candidateProfile === "string" && candidateProfile.trim().length > 0) {
+    systemPrompt += `
+
+THE CANDIDATE PROFILE / BACKGROUND:
+The candidate claims to have this specific background:
+"${candidateProfile.trim()}"
+
+You MUST cross-examine their answers against their claimed stack and technologies while strictly preserving your character persona rules. If they say they are an expert in Java, grill them on concurrency or JVM memory. If they claim to know automated testing, attack their validation strategies. Critically evaluate whether their proposed solution aligns with or leverages their background appropriately, or if they are failing to apply their claimed skills.`;
+  }
+
   try {
     const raw = await getCompletion(systemPrompt, userResponse);
     return parseResult(raw);
@@ -271,4 +285,59 @@ Evaluate the candidate's answer strictly based on this difficulty setting:
   }
 }
 
-module.exports = { evaluateTurn, generateChallenge };
+async function verifyAndExtractResume(rawText) {
+  if (!rawText || typeof rawText !== "string" || rawText.trim().length < 100) {
+    throw new Error("The uploaded document does not appear to be a professional resume or CV. Please upload a valid resume.");
+  }
+
+  const systemPrompt = `You are a professional recruiting assistant parser.
+Your task is to analyze the raw text uploaded by a candidate and perform two tasks:
+1. **Classification**: Verify if the text is a professional resume, Curriculum Vitae (CV), or a brief professional bio of a technical/software engineering professional. 
+2. **Extraction**: If it is a valid resume/CV, extract and summarize the core technical profile into a concise paragraph (under 150-200 words). Focus ONLY on: Target Role, Primary Technology Stack, Years/level of experience, and key technical project themes. Do not include contact info, headers, or generic boilerplate.
+
+If the document does not look like a resume/CV/bio (for example, if it is a receipt, utility bill, book, mathematical sheet, code script, or miscellaneous notes), you MUST set "isResume" to false and provide a reason in "extractedContent".
+
+Return ONLY a valid JSON object with this schema:
+{"isResume": true | false, "extractedContent": "concise technical summary here" | "error message here"}
+Do not return any surrounding text, markdown, or code fences.`;
+
+  try {
+    const responseText = await getCompletion(systemPrompt, rawText);
+    if (!responseText || typeof responseText !== "string") {
+      throw new Error("The uploaded document does not appear to be a professional resume or CV. Please upload a valid resume.");
+    }
+
+    // Clean markdown code blocks if any
+    let cleaned = responseText.trim();
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "");
+    cleaned = cleaned.replace(/\s*```$/i, "");
+    cleaned = cleaned.replace(/^`+|`+$/g, "");
+
+    const braceMatch = cleaned.match(/\{[\s\S]*?\}/);
+    if (!braceMatch) {
+      throw new Error("The uploaded document does not appear to be a professional resume or CV. Please upload a valid resume.");
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(braceMatch[0]);
+    } catch (e) {
+      throw new Error("The uploaded document does not appear to be a professional resume or CV. Please upload a valid resume.");
+    }
+
+    if (parsed.isResume === false || parsed.isResume === "false") {
+      throw new Error(parsed.extractedContent || "The uploaded document does not appear to be a professional resume or CV. Please upload a valid resume.");
+    }
+
+    if (!parsed.extractedContent || typeof parsed.extractedContent !== "string") {
+      throw new Error("The uploaded document does not appear to be a professional resume or CV. Please upload a valid resume.");
+    }
+
+    return parsed.extractedContent.trim();
+  } catch (error) {
+    console.error("verifyAndExtractResume error:", error.message);
+    throw error;
+  }
+}
+
+module.exports = { evaluateTurn, generateChallenge, verifyAndExtractResume };

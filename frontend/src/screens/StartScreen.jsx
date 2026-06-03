@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext.jsx';
 import { BOSSES } from '../constants/bosses.js';
 
@@ -10,6 +10,54 @@ function getRandomChallenge(boss) {
 export default function StartScreen() {
   const { gameState, dispatch } = useGame();
   const [isStarting, setIsStarting] = useState(null);
+  const [profileInput, setProfileInput] = useState(gameState.candidateProfile || '');
+  const fileInputRef = useRef(null);
+  const [uploadStatus, setUploadStatus] = useState(''); // '', 'uploading', 'success', 'error'
+  const [uploadError, setUploadError] = useState('');
+
+  useEffect(() => {
+    setProfileInput(gameState.candidateProfile || '');
+  }, [gameState.candidateProfile]);
+
+  async function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadStatus('error');
+      setUploadError('File size limit exceeded. Maximum size is 5MB.');
+      return;
+    }
+
+    setUploadStatus('uploading');
+    setUploadError('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/resume/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process resume');
+      }
+
+      setProfileInput(data.text);
+      setUploadStatus('success');
+    } catch (err) {
+      setUploadStatus('error');
+      setUploadError(err.message || 'Verification failed. Please try again.');
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }
 
   async function selectBoss(boss) {
     setIsStarting(boss.id);
@@ -20,7 +68,11 @@ export default function StartScreen() {
       const response = await fetch('http://127.0.0.1:5000/api/battle/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bossId: boss.id, difficulty: gameState.difficulty }),
+        body: JSON.stringify({ 
+          bossId: boss.id, 
+          difficulty: gameState.difficulty,
+          candidateProfile: profileInput,
+        }),
       });
       if (response.ok) {
         const data = await response.json();
@@ -42,6 +94,7 @@ export default function StartScreen() {
       payload: boss.id,
       welcomeMessage,
       challenge,
+      candidateProfile: profileInput,
     });
     setIsStarting(null);
   }
@@ -97,6 +150,58 @@ export default function StartScreen() {
             );
           })}
         </div>
+      </div>
+
+      {/* Candidate Profile / Resume Context */}
+      <div className="z-10 w-full max-w-xl flex flex-col gap-3 mb-10">
+        <div className="flex justify-between items-center px-1">
+          <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+            Candidate Profile Protocol (Resume / Keywords)
+          </span>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept=".pdf,.docx"
+            className="hidden"
+          />
+          <button
+            disabled={isStarting !== null || uploadStatus === 'uploading'}
+            onClick={() => fileInputRef.current?.click()}
+            className={`px-3 py-1 rounded border text-[9px] font-mono font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+              uploadStatus === 'uploading'
+                ? 'bg-slate-800/40 border-slate-700 text-slate-500 cursor-not-allowed'
+                : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-500/30 shadow-inner'
+            }`}
+          >
+            {uploadStatus === 'uploading' ? 'Analyzing...' : 'Upload PDF/DOCX'}
+          </button>
+        </div>
+        
+        <textarea
+          disabled={isStarting !== null || uploadStatus === 'uploading'}
+          value={profileInput}
+          onChange={(e) => setProfileInput(e.target.value)}
+          placeholder='Paste your resume text or upload your PDF/Word document to extract technical details and dynamically tailor the interview focus...'
+          rows={3}
+          className="w-full bg-slate-950/60 text-slate-100 font-mono text-xs border border-slate-800/80 rounded-xl px-4 py-3 resize-none focus:outline-none transition-all placeholder:text-slate-600 focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/10 backdrop-blur-md leading-relaxed shadow-inner"
+        />
+
+        {uploadStatus === 'uploading' && (
+          <span className="text-[9px] font-mono text-indigo-400 uppercase tracking-widest animate-pulse px-1">
+            ⌁ [EXTRACTING PROFILE CONTEXT & CLASSIFYING DOCUMENT...]
+          </span>
+        )}
+        {uploadStatus === 'success' && (
+          <span className="text-[9px] font-mono text-emerald-400 uppercase tracking-widest px-1">
+            ✓ [RESUME VERIFIED & PARSED SUCCESSFULLY]
+          </span>
+        )}
+        {uploadStatus === 'error' && (
+          <span className="text-[9px] font-mono text-rose-500 uppercase tracking-widest px-1">
+            ✗ [UPLOAD FAILED: {uploadError}]
+          </span>
+        )}
       </div>
 
       {/* Cards */}

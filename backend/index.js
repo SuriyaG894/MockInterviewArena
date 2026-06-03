@@ -33,9 +33,21 @@ if (provider === "groq") {
   process.exit(1);
 }
 
-const { evaluateTurn, generateChallenge } = require("./agent");
+const multer = require("multer");
+const pdfParse = require("pdf-parse");
+const mammoth = require("mammoth");
+
+const { evaluateTurn, generateChallenge, verifyAndExtractResume } = require("./agent");
 
 const app = express();
+
+// Configure multer memory storage with 5MB file size limit
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -45,9 +57,67 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", service: "The Mock Arena API" });
 });
 
+app.post("/api/resume/upload", (req, res) => {
+  upload.single("file")(req, res, async (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ error: "File size limit exceeded. Maximum file size is 5MB." });
+      }
+      return res.status(400).json({ error: `Upload error: ${err.message}` });
+    } else if (err) {
+      return res.status(400).json({ error: `Upload failed: ${err.message}` });
+    }
+
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded. Please select a PDF or Word document." });
+      }
+
+      const filename = req.file.originalname.toLowerCase();
+      const mimetype = req.file.mimetype;
+      let extractedText = "";
+
+      if (mimetype === "application/pdf" || filename.endsWith(".pdf")) {
+        try {
+          const parser = new pdfParse.PDFParse({ data: req.file.buffer });
+          const parsed = await parser.getText();
+          extractedText = parsed.text;
+        } catch (err) {
+          console.error("PDF Parsing Error:", err.message);
+          return res.status(400).json({ error: "Failed to parse PDF document. Ensure the file is not corrupted." });
+        }
+      } else if (
+        mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || 
+        filename.endsWith(".docx")
+      ) {
+        try {
+          const parsed = await mammoth.extractRawText({ buffer: req.file.buffer });
+          extractedText = parsed.value;
+        } catch (err) {
+          return res.status(400).json({ error: "Failed to parse Word document. Ensure the file is not corrupted." });
+        }
+      } else {
+        return res.status(400).json({ error: "Unsupported file type. Please upload a PDF (.pdf) or Word document (.docx)." });
+      }
+
+      const trimmedText = extractedText.trim();
+      if (trimmedText.length < 100) {
+        return res.status(400).json({ error: "The uploaded document is too short to be parsed as a resume." });
+      }
+
+      // Verify and extract profile summary using LLM
+      const summarizedText = await verifyAndExtractResume(trimmedText);
+      res.json({ text: summarizedText });
+    } catch (error) {
+      console.error("Resume upload error:", error.message);
+      res.status(400).json({ error: error.message || "Failed to process the uploaded resume." });
+    }
+  });
+});
+
 app.post("/api/battle/start", async (req, res) => {
   try {
-    const { bossId, difficulty } = req.body;
+    const { bossId, difficulty, candidateProfile } = req.body;
 
     if (!bossId || !difficulty) {
       return res.status(400).json({
@@ -55,7 +125,7 @@ app.post("/api/battle/start", async (req, res) => {
       });
     }
 
-    const result = await generateChallenge(bossId, difficulty);
+    const result = await generateChallenge(bossId, difficulty, candidateProfile);
     res.json(result);
   } catch (error) {
     console.error("Battle start error:", error.message);
@@ -67,7 +137,7 @@ app.post("/api/battle/start", async (req, res) => {
 
 app.post("/api/battle/turn", async (req, res) => {
   try {
-    const { bossId, userResponse, difficulty } = req.body;
+    const { bossId, userResponse, difficulty, candidateProfile } = req.body;
 
     if (!bossId || !userResponse) {
       return res.status(400).json({
@@ -75,7 +145,7 @@ app.post("/api/battle/turn", async (req, res) => {
       });
     }
 
-    const result = await evaluateTurn(bossId, userResponse, difficulty || "medium");
+    const result = await evaluateTurn(bossId, userResponse, difficulty || "medium", candidateProfile);
     res.json(result);
   } catch (error) {
     console.error("Battle turn error:", error.message);

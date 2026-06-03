@@ -370,4 +370,89 @@ describe("Mock Interview Arena API Tests", () => {
       expect(response.body.error).toBe("bossId and difficulty are required");
     });
   });
+
+  describe("Candidate Profile Logic", () => {
+    it("should inject candidate profile instructions into the system prompt during challenge generation", async () => {
+      getCompletion.mockResolvedValueOnce(
+        JSON.stringify({ question: "Spring Boot question." })
+      );
+
+      const response = await request(app)
+        .post("/api/battle/start")
+        .send({
+          bossId: "cto",
+          difficulty: "medium",
+          candidateProfile: "Java Spring Boot dev",
+        });
+
+      expect(response.status).toBe(200);
+      expect(getCompletion).toHaveBeenCalledTimes(1);
+      const firstArg = getCompletion.mock.calls[0][0];
+      expect(firstArg).toContain("THE CANDIDATE PROFILE / BACKGROUND");
+      expect(firstArg).toContain("Java Spring Boot dev");
+    });
+
+    it("should inject candidate profile instructions into the system prompt during turn evaluation", async () => {
+      getCompletion.mockResolvedValueOnce(
+        JSON.stringify({
+          dialogue: "Spring Boot evaluation critique.",
+          damageTo: "boss",
+          damageAmount: 20,
+        })
+      );
+
+      const response = await request(app)
+        .post("/api/battle/turn")
+        .send({
+          bossId: "cto",
+          userResponse: "I will use `@SpringBootApplication` and auto-configure dependencies.",
+          difficulty: "medium",
+          candidateProfile: "Java Spring Boot dev",
+        });
+
+      expect(response.status).toBe(200);
+      expect(getCompletion).toHaveBeenCalledTimes(1);
+      const firstArg = getCompletion.mock.calls[0][0];
+      expect(firstArg).toContain("THE CANDIDATE PROFILE / BACKGROUND");
+      expect(firstArg).toContain("Java Spring Boot dev");
+      expect(firstArg).toContain("cross-examine their answers against their claimed stack");
+    });
+  });
+
+  describe("verifyAndExtractResume logic", () => {
+    it("should successfully verify a valid resume and return the extracted summary", async () => {
+      getCompletion.mockResolvedValueOnce(
+        JSON.stringify({
+          isResume: true,
+          extractedContent: "Extracted Java backend developer summary.",
+        })
+      );
+
+      const { verifyAndExtractResume } = require("./agent");
+      const result = await verifyAndExtractResume(
+        "Suriya G. Software Engineer. Skills: Java, Spring Boot, Postgres. Experience: 3 years building payment gateways."
+      );
+
+      expect(result).toBe("Extracted Java backend developer summary.");
+      expect(getCompletion).toHaveBeenCalledTimes(1);
+      const prompt = getCompletion.mock.calls[0][0];
+      expect(prompt).toContain("Classification");
+      expect(prompt).toContain("Extraction");
+    });
+
+    it("should throw an error if the LLM identifies the document as a non-resume", async () => {
+      getCompletion.mockResolvedValueOnce(
+        JSON.stringify({
+          isResume: false,
+          extractedContent: "The document is a restaurant receipt for coffee and pastries.",
+        })
+      );
+
+      const { verifyAndExtractResume } = require("./agent");
+      
+      await expect(
+        verifyAndExtractResume("Starbucks Coffee Company Receipt. Order ID: #1002345. Date: 2026-06-03. Items: 1x Latte ($4.50), 1x Croissant ($3.50), 1x Blueberry Muffin ($3.75). Total: $12.77. Thank you!")
+      ).rejects.toThrow("The document is a restaurant receipt for coffee and pastries.");
+    });
+  });
 });

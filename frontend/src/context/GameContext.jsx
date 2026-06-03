@@ -12,6 +12,7 @@ export const initialState = {
   isProcessing: false,
   currentChallenge: null,
   difficulty: 'medium',
+  candidateProfile: '',
 };
 
 export function gameReducer(state, action) {
@@ -58,6 +59,7 @@ export function gameReducer(state, action) {
         selectedBoss: action.payload ?? null,
         gameStatus: action.payload ? 'COMBAT' : 'SELECT',
         currentChallenge: action.challenge ?? null,
+        candidateProfile: action.candidateProfile ?? '',
         battleLog: welcomeEntry
           ? [...state.battleLog, welcomeEntry]
           : state.battleLog,
@@ -131,6 +133,7 @@ export function GameProvider({ children }) {
           bossId: gameState.selectedBoss,
           userResponse: userAnswer,
           difficulty: gameState.difficulty,
+          candidateProfile: gameState.candidateProfile,
         }),
         signal: controller.signal,
       });

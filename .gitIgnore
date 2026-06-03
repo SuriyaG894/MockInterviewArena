@@ -14,3 +14,5 @@ e2e-tests/
 package-lock.json
 package.json
 playwright.config.js
+docs
+scratch
