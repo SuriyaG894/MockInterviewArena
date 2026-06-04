@@ -56,7 +56,16 @@ export default function ArenaScreen() {
   const playerWon = isGameOver && gameState.bossHP <= 0;
 
   const activeBoss = BOSSES.find((b) => b.id === gameState.selectedBoss) || BOSSES[0];
-  const vsColor = activeBoss.theme?.vsColor || 'border-slate-500/40 text-slate-400 shadow-[0_0_15px_rgba(255,255,255,0.1)]';
+  const isLight = gameState.theme === 'light';
+
+  const vsColor = isLight
+    ? {
+        indigo: 'border-indigo-200 text-indigo-650 shadow-[0_2px_10px_rgba(99,102,241,0.1)] bg-white',
+        rose: 'border-rose-200 text-rose-650 shadow-[0_2px_10px_rgba(244,63,94,0.1)] bg-white',
+        amber: 'border-amber-250 text-amber-800 shadow-[0_2px_10px_rgba(245,158,11,0.1)] bg-white',
+        teal: 'border-teal-250 text-teal-800 shadow-[0_2px_10px_rgba(20,184,166,0.1)] bg-white',
+      }[activeBoss.theme?.color || 'indigo']
+    : (activeBoss.theme?.vsColor || 'border-slate-500/40 text-slate-400 shadow-[0_0_15px_rgba(255,255,255,0.1)] bg-slate-950');
 
   const { selectedBoss, battleLog, difficulty, candidateProfile, reportCard, isGeneratingReport } = gameState;
   const playerPassed = reportCard
@@ -71,44 +80,44 @@ export default function ArenaScreen() {
 
   const themeColors = {
     indigo: {
-      text: 'text-indigo-400 print:text-indigo-700',
-      border: 'border-indigo-500/30 print:border-slate-350',
-      bg: 'bg-indigo-950/20 print:bg-transparent',
-      bgHover: 'hover:bg-indigo-900/10',
+      text: isLight ? 'text-indigo-650 print:text-indigo-700' : 'text-indigo-400 print:text-indigo-700',
+      border: isLight ? 'border-indigo-200/80 print:border-slate-350' : 'border-indigo-500/30 print:border-slate-350',
+      bg: isLight ? 'bg-indigo-50/50 print:bg-transparent' : 'bg-indigo-950/20 print:bg-transparent',
+      bgHover: isLight ? 'hover:bg-indigo-100/30' : 'hover:bg-indigo-900/10',
       fill: 'fill-indigo-500 print:fill-indigo-700',
-      accent: 'bg-indigo-500 print:bg-indigo-700',
-      glow: 'shadow-[0_0_20px_rgba(99,102,241,0.15)] print:shadow-none',
-      borderAccent: 'border-indigo-500/40 print:border-slate-350'
+      accent: 'bg-indigo-600 dark:bg-indigo-500 print:bg-indigo-700',
+      glow: isLight ? 'shadow-[0_4px_20px_rgba(99,102,241,0.08)] print:shadow-none' : 'shadow-[0_0_20px_rgba(99,102,241,0.15)] print:shadow-none',
+      borderAccent: isLight ? 'border-indigo-300 print:border-slate-350' : 'border-indigo-500/40 print:border-slate-350'
     },
     rose: {
-      text: 'text-rose-450 print:text-rose-700',
-      border: 'border-rose-500/30 print:border-slate-350',
-      bg: 'bg-rose-950/20 print:bg-transparent',
-      bgHover: 'hover:bg-rose-900/10',
+      text: isLight ? 'text-rose-650 print:text-rose-700' : 'text-rose-450 print:text-rose-700',
+      border: isLight ? 'border-rose-200/80 print:border-slate-350' : 'border-rose-500/30 print:border-slate-350',
+      bg: isLight ? 'bg-rose-50/50 print:bg-transparent' : 'bg-rose-950/20 print:bg-transparent',
+      bgHover: isLight ? 'hover:bg-rose-100/30' : 'hover:bg-rose-900/10',
       fill: 'fill-rose-500 print:fill-rose-700',
-      accent: 'bg-rose-500 print:bg-rose-700',
-      glow: 'shadow-[0_0_20px_rgba(244,63,94,0.15)] print:shadow-none',
-      borderAccent: 'border-rose-500/40 print:border-slate-350'
+      accent: 'bg-rose-600 dark:bg-rose-500 print:bg-rose-700',
+      glow: isLight ? 'shadow-[0_4px_20px_rgba(244,63,94,0.08)] print:shadow-none' : 'shadow-[0_0_20px_rgba(244,63,94,0.15)] print:shadow-none',
+      borderAccent: isLight ? 'border-rose-300 print:border-slate-350' : 'border-rose-500/40 print:border-slate-350'
     },
     amber: {
-      text: 'text-amber-405 print:text-amber-700',
-      border: 'border-amber-500/30 print:border-slate-350',
-      bg: 'bg-amber-950/20 print:bg-transparent',
-      bgHover: 'hover:bg-amber-900/10',
+      text: isLight ? 'text-amber-750 print:text-amber-700' : 'text-amber-405 print:text-amber-700',
+      border: isLight ? 'border-amber-200/80 print:border-slate-350' : 'border-amber-500/30 print:border-slate-350',
+      bg: isLight ? 'bg-amber-50/50 print:bg-transparent' : 'bg-amber-950/20 print:bg-transparent',
+      bgHover: isLight ? 'hover:bg-amber-100/30' : 'hover:bg-amber-900/10',
       fill: 'fill-amber-500 print:fill-amber-700',
-      accent: 'bg-amber-500 print:bg-amber-700',
-      glow: 'shadow-[0_0_20px_rgba(245,158,11,0.15)] print:shadow-none',
-      borderAccent: 'border-amber-500/40 print:border-slate-350'
+      accent: 'bg-amber-600 dark:bg-amber-500 print:bg-amber-700',
+      glow: isLight ? 'shadow-[0_4px_20px_rgba(245,158,11,0.08)] print:shadow-none' : 'shadow-[0_0_20px_rgba(245,158,11,0.15)] print:shadow-none',
+      borderAccent: isLight ? 'border-amber-300 print:border-slate-350' : 'border-amber-500/40 print:border-slate-350'
     },
     teal: {
-      text: 'text-teal-400 print:text-teal-700',
-      border: 'border-teal-500/30 print:border-slate-350',
-      bg: 'bg-teal-950/20 print:bg-transparent',
-      bgHover: 'hover:bg-teal-900/10',
+      text: isLight ? 'text-teal-650 print:text-teal-700' : 'text-teal-400 print:text-teal-700',
+      border: isLight ? 'border-teal-200/80 print:border-slate-350' : 'border-teal-500/30 print:border-slate-350',
+      bg: isLight ? 'bg-teal-50/50 print:bg-transparent' : 'bg-teal-950/20 print:bg-transparent',
+      bgHover: isLight ? 'hover:bg-teal-100/30' : 'hover:bg-teal-900/10',
       fill: 'fill-teal-500 print:fill-teal-700',
-      accent: 'bg-teal-500 print:bg-teal-700',
-      glow: 'shadow-[0_0_20px_rgba(20,184,166,0.15)] print:shadow-none',
-      borderAccent: 'border-teal-500/40 print:border-slate-350'
+      accent: 'bg-teal-600 dark:bg-teal-500 print:bg-teal-700',
+      glow: isLight ? 'shadow-[0_4px_20px_rgba(20,184,166,0.08)] print:shadow-none' : 'shadow-[0_0_20px_rgba(20,184,166,0.15)] print:shadow-none',
+      borderAccent: isLight ? 'border-teal-300 print:border-slate-350' : 'border-teal-500/40 print:border-slate-350'
     }
   };
 
@@ -144,15 +153,24 @@ Generated by the Mock Interview Arena.`;
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#070a13] bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-slate-950 via-slate-900 to-[#070a13] relative overflow-hidden font-sans print:h-auto print:overflow-visible print:bg-white print:text-slate-950">
+    <div className="h-screen flex flex-col bg-slate-50 dark:bg-[#070a13] bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-50/60 dark:from-slate-950 via-slate-50 dark:via-slate-900 to-zinc-100 dark:to-[#070a13] relative overflow-hidden font-sans print:h-auto print:overflow-visible print:bg-white print:text-slate-950 transition-colors duration-300">
       {/* Background Cyberpunk Details */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b0b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b0b_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none print:hidden" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a05_1px,transparent_1px),linear-gradient(to_bottom,#0f172a05_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b0b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b0b_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none print:hidden" />
 
       {/* Top HUD — Combat Health Area */}
-      <div className="z-10 flex gap-6 items-center p-4 border-b border-slate-800/80 bg-slate-950/45 backdrop-blur-md print:hidden">
+      <div className="z-10 flex gap-4 sm:gap-6 items-center p-4 border-b border-slate-200 dark:border-slate-800/80 bg-white/70 dark:bg-slate-950/45 backdrop-blur-md print:hidden">
+        {/* Theme Toggle */}
+        <button
+          onClick={() => dispatch({ type: 'TOGGLE_THEME' })}
+          className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-slate-355 dark:hover:border-slate-700 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all cursor-pointer shadow-sm dark:shadow-md select-none text-xs flex items-center justify-center font-bold"
+          title={gameState.theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {gameState.theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+
         {/* Player Profile */}
         <div className="flex-1 flex gap-3 items-center">
-          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-cyan-400 shadow-inner relative">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center font-mono font-bold text-cyan-500 dark:text-cyan-400 shadow-sm dark:shadow-inner relative">
             💻
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-slate-950 animate-pulse" />
           </div>
@@ -162,13 +180,13 @@ Generated by the Mock Interview Arena.`;
         </div>
 
         {/* VS Badge */}
-        <div className={`hidden sm:flex w-10 h-10 rounded-full border bg-slate-950 items-center justify-center text-xs font-mono font-bold select-none ${vsColor}`}>
+        <div className={`hidden sm:flex w-10 h-10 rounded-full border items-center justify-center text-xs font-mono font-bold select-none ${vsColor}`}>
           VS
         </div>
 
         {/* Boss Profile */}
         <div className="flex-1 flex gap-3 items-center flex-row-reverse">
-          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-lg shadow-inner relative">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center font-mono font-bold text-lg shadow-sm dark:shadow-inner relative">
             {activeBoss.icon}
             <span className={`absolute bottom-0 left-0 w-2.5 h-2.5 rounded-full border border-slate-950 animate-pulse ${activeBoss.theme?.hudAccent || 'bg-slate-500'}`} />
           </div>
@@ -183,12 +201,12 @@ Generated by the Mock Interview Arena.`;
 
       {/* Holographic Challenge Banner */}
       {gameState.currentChallenge && (
-        <div className="z-10 px-6 py-4 border-b border-slate-800/50 bg-indigo-950/15 print:hidden">
-          <div className="max-w-4xl mx-auto flex items-start gap-4 p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
+        <div className="z-10 px-6 py-4 border-b border-slate-200 dark:border-slate-800/50 bg-indigo-50/30 dark:bg-indigo-950/15 print:hidden">
+          <div className="max-w-4xl mx-auto flex items-start gap-4 p-3 rounded-xl bg-white dark:bg-indigo-950/20 border border-indigo-150 dark:border-indigo-500/20 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.1)]">
             <span className="text-2xl mt-0.5 animate-bounce">🎯</span>
             <div>
-              <div className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Active Challenge Protocol</div>
-              <p className="text-sm font-semibold text-slate-100 leading-relaxed">{gameState.currentChallenge}</p>
+              <div className="text-[10px] font-mono font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-widest mb-0.5">Active Challenge Protocol</div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-relaxed">{gameState.currentChallenge}</p>
             </div>
           </div>
         </div>
@@ -203,7 +221,7 @@ Generated by the Mock Interview Arena.`;
           if (isSystem) {
             return (
               <div key={i} className="flex justify-center my-4">
-                <div className="bg-red-950/30 border border-red-500/30 rounded-xl px-4 py-2 text-xs font-mono text-red-400 flex items-center gap-2 shadow-[0_0_10px_rgba(239,68,68,0.1)] animate-pulse">
+                <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-500/30 rounded-xl px-4 py-2 text-xs font-mono text-red-650 dark:text-red-400 flex items-center gap-2 shadow-sm dark:shadow-[0_0_10px_rgba(239,68,68,0.1)] animate-pulse">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                   {entry.text}
                 </div>
@@ -211,20 +229,24 @@ Generated by the Mock Interview Arena.`;
             );
           }
 
+          const playerTextAccent = isLight
+            ? { indigo: 'text-indigo-600', rose: 'text-rose-600', amber: 'text-amber-700', teal: 'text-teal-700' }[activeBoss.theme?.color || 'indigo']
+            : (activeBoss.theme?.textAccent || 'text-indigo-400/80');
+
           return (
             <div
               key={i}
               className={`flex ${isPlayer ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] px-5 py-3 rounded-2xl shadow-md border leading-relaxed ${
+                className={`max-w-[80%] px-5 py-3 rounded-2xl shadow-sm dark:shadow-md border leading-relaxed ${
                   isPlayer
-                    ? `bg-slate-900/90 ${activeBoss.theme?.borderAccent || 'border-indigo-500/30'} text-slate-100 rounded-br-sm glow-${activeBoss.theme?.color || 'indigo'} font-mono text-xs font-medium`
-                    : 'bg-slate-900/60 border-slate-800/80 text-slate-200 rounded-bl-sm backdrop-blur-sm'
+                    ? `bg-white dark:bg-slate-900/90 ${isLight ? 'border-slate-300 shadow-sm' : activeBoss.theme?.borderAccent || 'border-indigo-500/30'} text-slate-800 dark:text-slate-100 rounded-br-sm glow-${isLight ? 'none' : activeBoss.theme?.color || 'indigo'} font-mono text-xs font-medium`
+                    : 'bg-slate-100/85 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 rounded-bl-sm backdrop-blur-sm'
                 }`}
               >
                 {isPlayer && (
-                  <div className={`text-[9px] font-mono ${activeBoss.theme?.textAccent || 'text-indigo-400/80'} mb-1 select-none`}>
+                  <div className={`text-[9px] font-mono ${playerTextAccent} mb-1 select-none`}>
                     CANDIDATE_RESPONSE &gt;
                   </div>
                 )}
@@ -237,32 +259,32 @@ Generated by the Mock Interview Arena.`;
       </div>
 
       {/* Bottom HUD — Terminal Input Console */}
-      <div className="border-t border-slate-800/80 bg-slate-950/60 backdrop-blur-md p-4 z-10 print:hidden">
+      <div className="border-t border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/60 backdrop-blur-md p-4 z-10 print:hidden">
         <div className="max-w-4xl mx-auto w-full">
           {gameState.isProcessing ? (
-            <div className="flex flex-col items-center justify-center h-24 text-slate-400 gap-2">
+            <div className="flex flex-col items-center justify-center h-24 text-slate-500 dark:text-slate-400 gap-2">
               <div className="flex gap-1.5 items-center">
                 <span className={`w-2.5 h-2.5 rounded-full animate-bounce ${activeBoss.theme?.hudAccent || 'bg-slate-500'}`} style={{ animationDelay: '0ms' }} />
                 <span className={`w-2.5 h-2.5 rounded-full animate-bounce ${activeBoss.theme?.hudAccent || 'bg-slate-500'}`} style={{ animationDelay: '150ms' }} />
                 <span className={`w-2.5 h-2.5 rounded-full animate-bounce ${activeBoss.theme?.hudAccent || 'bg-slate-500'}`} style={{ animationDelay: '300ms' }} />
               </div>
-              <span className="text-xs font-mono uppercase tracking-wider text-slate-500 animate-pulse">
+              <span className="text-xs font-mono uppercase tracking-wider text-slate-650 dark:text-slate-500 animate-pulse">
                 Interviewer is evaluating your response...
               </span>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row gap-4 items-end bg-slate-900/40 border border-slate-800 p-3 rounded-xl">
+            <div className="flex flex-col sm:flex-row gap-4 items-end bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-sm dark:shadow-none">
               <button
                 onClick={handleQuit}
                 disabled={gameState.isProcessing}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider text-slate-400 hover:text-red-400 border border-slate-800 hover:border-red-500/50 bg-slate-950/80 transition-all cursor-pointer select-none self-stretch flex items-center justify-center"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider text-slate-600 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 border border-slate-250 dark:border-slate-800 hover:border-red-300 dark:hover:border-red-500/50 bg-white dark:bg-slate-950/80 hover:bg-red-50/50 dark:hover:bg-slate-950/80 transition-all cursor-pointer select-none self-stretch flex items-center justify-center shadow-sm"
               >
                 End Interview
               </button>
               <div className="flex-1 w-full flex flex-col gap-1.5">
                 <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Submit Proposal</span>
-                  <span className="text-[10px] font-mono text-slate-600 hidden sm:inline">Enter to execute</span>
+                  <span className="text-[10px] font-mono font-bold text-slate-550 dark:text-slate-500 uppercase tracking-widest">Submit Proposal</span>
+                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-600 hidden sm:inline">Enter to execute</span>
                 </div>
                 <textarea
                   value={input}
@@ -270,7 +292,7 @@ Generated by the Mock Interview Arena.`;
                   onKeyDown={handleKeyDown}
                   placeholder={activeBoss.placeholder}
                   rows={2}
-                  className={`w-full bg-slate-950/80 text-slate-100 font-mono text-xs border border-slate-850/85 rounded-lg px-3 py-2.5 resize-none focus:outline-none transition-all placeholder:text-slate-600 leading-relaxed shadow-inner ${activeBoss.theme?.focusRing || 'focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20'}`}
+                  className={`w-full bg-white dark:bg-slate-950/80 text-slate-900 dark:text-slate-100 font-mono text-xs border border-slate-200 dark:border-slate-850/85 rounded-lg px-3 py-2.5 resize-none focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 leading-relaxed shadow-sm dark:shadow-inner ${isLight ? 'focus:border-indigo-550 focus:ring-1 focus:ring-indigo-500/10' : activeBoss.theme?.focusRing || 'focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20'}`}
                 />
               </div>
               <button
@@ -278,7 +300,7 @@ Generated by the Mock Interview Arena.`;
                 disabled={!input.trim() || gameState.isProcessing}
                 className={`w-full sm:w-auto px-6 py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider text-white transition-all cursor-pointer select-none self-stretch flex items-center justify-center ${
                   !input.trim() || gameState.isProcessing
-                    ? 'bg-slate-800/50 border border-slate-700/50 text-slate-500 cursor-not-allowed opacity-40'
+                    ? 'bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-40'
                     : activeBoss.theme?.execButton || 'bg-slate-600 border border-slate-500'
                 }`}
               >
@@ -291,30 +313,30 @@ Generated by the Mock Interview Arena.`;
 
       {/* Game Over Sci-Fi Overlay */}
       {isGameOver && (
-        <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-6 overflow-hidden print:bg-white print:text-slate-950 print:p-0 print:static print:h-auto print:w-full print:overflow-visible animate-[fadeIn_0.2s_ease-out]">
+        <div className="absolute inset-0 bg-slate-50/90 dark:bg-slate-950/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-6 overflow-hidden print:bg-white print:text-slate-950 print:p-0 print:static print:h-auto print:w-full print:overflow-visible animate-[fadeIn_0.2s_ease-out]">
           {isGeneratingReport ? (
             <div className="flex flex-col items-center gap-6 max-w-md text-center animate-pulse">
               {/* Spinning/pulsing cybernetic loader */}
               <div className="relative w-20 h-20">
-                <div className={`absolute inset-0 rounded-full border-4 border-slate-800 border-t-cyan-500 animate-spin`} />
-                <div className="absolute inset-2 rounded-full border-4 border-slate-900 border-b-indigo-500 animate-spin [animation-direction:reverse]" />
-                <div className="absolute inset-0 m-auto w-6 h-6 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-xs">
+                <div className={`absolute inset-0 rounded-full border-4 border-slate-250 dark:border-slate-800 border-t-cyan-600 dark:border-t-cyan-500 animate-spin`} />
+                <div className="absolute inset-2 rounded-full border-4 border-slate-100 dark:border-slate-900 border-b-indigo-600 dark:border-b-indigo-500 animate-spin [animation-direction:reverse]" />
+                <div className="absolute inset-0 m-auto w-6 h-6 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-xs">
                   ⚡
                 </div>
               </div>
               <div>
-                <h3 className="text-xl font-bold font-mono tracking-wider text-slate-100 uppercase mb-2">Synthesizing Feedback</h3>
-                <p className="text-xs font-mono text-slate-500 uppercase tracking-widest">Running technical assessment engines...</p>
+                <h3 className="text-xl font-bold font-mono tracking-wider text-slate-900 dark:text-slate-100 uppercase mb-2">Synthesizing Feedback</h3>
+                <p className="text-xs font-mono text-slate-600 dark:text-slate-500 uppercase tracking-widest">Running technical assessment engines...</p>
               </div>
-              <p className="text-sm text-slate-400 font-sans leading-relaxed">
+              <p className="text-sm text-slate-650 dark:text-slate-400 font-sans leading-relaxed">
                 Evaluating your design choices, trade-offs, code accuracy, and alignment with your profile keywords.
               </p>
             </div>
           ) : !reportCard ? (
-            <div className="max-w-md w-full border border-slate-800 p-8 rounded-2xl text-center bg-slate-900/60 backdrop-blur-md shadow-2xl space-y-4">
+            <div className="max-w-md w-full border border-slate-200 dark:border-slate-800 p-8 rounded-2xl text-center bg-white dark:bg-slate-900/60 backdrop-blur-md shadow-xl dark:shadow-2xl space-y-4">
               <span className="text-4xl block">⚠️</span>
-              <h3 className="text-xl font-bold text-slate-200">Evaluation Synthesis Faltered</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-200">Evaluation Synthesis Faltered</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 The evaluation engine could not process the battle history logs. You can still retry generation or restart the simulation.
               </p>
               <div className="flex gap-3">
@@ -326,29 +348,37 @@ Generated by the Mock Interview Arena.`;
                 </button>
                 <button
                   onClick={() => dispatch({ type: 'RESET' })}
-                  className="flex-1 py-2.5 rounded-lg border border-slate-700 hover:border-slate-600 text-xs font-mono font-bold uppercase tracking-wider text-slate-350 transition-all cursor-pointer"
+                  className="flex-1 py-2.5 rounded-lg border border-slate-250 dark:border-slate-700 hover:border-slate-350 dark:hover:border-slate-600 text-xs font-mono font-bold uppercase tracking-wider text-slate-650 dark:text-slate-350 transition-all cursor-pointer"
                 >
                   Restart
                 </button>
               </div>
             </div>
           ) : (
-            <div className="max-w-4xl w-full max-h-[92vh] flex flex-col bg-slate-900/80 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-lg print:border-none print:shadow-none print:max-h-none print:bg-transparent print:h-auto print:overflow-visible">
+            <div className="max-w-4xl w-full max-h-[92vh] flex flex-col bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl dark:shadow-2xl overflow-hidden backdrop-blur-lg print:border-none print:shadow-none print:max-h-none print:bg-transparent print:h-auto print:overflow-visible">
               {/* Scrollable Content Area */}
               <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 print:overflow-visible print:p-0">
+                {/* Back to main page header controls */}
+                <button
+                  onClick={() => dispatch({ type: 'RESET' })}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-750 hover:border-slate-350 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:text-slate-900 dark:hover:text-slate-100 text-xs font-mono font-bold transition-all cursor-pointer select-none print:hidden shadow-sm"
+                >
+                  ← Back to Main Page
+                </button>
+
                 {/* Header Row */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800 print:border-slate-300">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-200 dark:border-slate-800 print:border-slate-300">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xl">{activeBoss.icon}</span>
                       <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase print:text-slate-650">Post-Game Technical Evaluation</span>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-black font-sans text-slate-100 tracking-tight print:text-slate-950">
+                    <h2 className="text-2xl md:text-3xl font-black font-sans text-slate-900 dark:text-slate-100 tracking-tight print:text-slate-950">
                       Candidate Performance Matrix
                     </h2>
                     <div className="flex gap-2 items-center mt-2">
-                      <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 capitalize print:border-slate-300 print:text-slate-800">{gameState.difficulty} Difficulty</span>
-                      <span className={`text-xs font-mono px-2.5 py-0.5 rounded-full border bg-slate-950/40 font-semibold print:text-slate-805 print:border-slate-300 ${playerPassed ? 'border-emerald-500/30 text-emerald-400' : 'border-red-500/30 text-red-400'}`}>
+                      <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 capitalize print:border-slate-300 print:text-slate-800">{gameState.difficulty} Difficulty</span>
+                      <span className={`text-xs font-mono px-2.5 py-0.5 rounded-full border font-semibold print:text-slate-805 print:border-slate-300 ${playerPassed ? 'border-emerald-250 text-emerald-600 dark:border-emerald-500/30 dark:text-emerald-400 bg-emerald-50/40 dark:bg-slate-950/40' : 'border-red-200 text-red-650 dark:border-red-500/30 dark:text-red-400 bg-red-50/40 dark:bg-slate-950/40'}`}>
                         {playerPassed ? 'Simulation Cleared' : 'Evaluation Failed'}
                       </span>
                     </div>
@@ -357,26 +387,26 @@ Generated by the Mock Interview Arena.`;
                   {/* Glowing overall score indicator */}
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="text-[9px] font-mono uppercase tracking-widest text-slate-500">Overall Rating</div>
-                      <div className={`text-3xl md:text-4xl font-black font-mono tracking-tighter ${playerPassed ? 'text-emerald-400 text-glow-indigo' : 'text-red-400 text-glow-rose'} print:text-slate-950`}>
+                      <div className="text-[9px] font-mono uppercase tracking-widest text-slate-550 dark:text-slate-500">Overall Rating</div>
+                      <div className={`text-3xl md:text-4xl font-black font-mono tracking-tighter ${playerPassed ? 'text-emerald-600 dark:text-emerald-400 text-glow-indigo' : 'text-red-600 dark:text-red-400 text-glow-rose'} print:text-slate-950`}>
                         {reportCard.overallVerdict.overallScore}%
                       </div>
                     </div>
-                    <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-slate-950/60 border ${currentTheme.border} flex items-center justify-center ${currentTheme.glow} print:border-slate-300`}>
+                    <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border ${currentTheme.border} flex items-center justify-center ${currentTheme.glow} print:border-slate-300 shadow-inner`}>
                       <span className="text-3xl md:text-4xl">{playerPassed ? '🏆' : '💀'}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Boss summary narrative */}
-                <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800/80 relative overflow-hidden print:bg-slate-100 print:border-slate-200">
+                <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 relative overflow-hidden print:bg-slate-100 print:border-slate-200">
                   <div className={`absolute top-0 left-0 bottom-0 w-1 ${playerPassed ? 'bg-emerald-500' : 'bg-red-500'}`} />
                   <div className="pl-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 print:text-slate-650">Interviewer Verdict Narrative</span>
-                      <span className="text-xs font-semibold text-slate-400">— {activeBoss.title}</span>
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">— {activeBoss.title}</span>
                     </div>
-                    <p className="text-slate-300 text-sm italic leading-relaxed font-mono print:text-slate-850">
+                    <p className="text-slate-700 dark:text-slate-300 text-sm italic leading-relaxed font-mono print:text-slate-850">
                       "{reportCard.overallVerdict.summary}"
                     </p>
                   </div>
@@ -386,7 +416,7 @@ Generated by the Mock Interview Arena.`;
                 <div className="space-y-4 print:hidden">
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-3 bg-indigo-500 rounded-sm" />
-                    <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-slate-400">Core Competency Assessment</h3>
+                    <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Core Competency Assessment</h3>
                   </div>
                   
                   {/* Grid of Category Tabs */}
@@ -399,14 +429,14 @@ Generated by the Mock Interview Arena.`;
                           onClick={() => setActiveCategoryIndex(idx)}
                           className={`p-3.5 rounded-xl border text-left transition-all duration-300 cursor-pointer flex flex-col justify-between h-24 print:h-auto print:border-slate-300 ${
                             isActive 
-                              ? `${currentTheme.borderAccent} bg-slate-800/50 shadow-[0_0_15px_rgba(255,255,255,0.03)]` 
-                              : 'border-slate-800 bg-slate-950/20 hover:border-slate-700 hover:bg-slate-900/10'
+                              ? `${currentTheme.borderAccent} bg-indigo-50/40 dark:bg-slate-800/50 shadow-sm dark:shadow-[0_0_15px_rgba(255,255,255,0.03)]` 
+                              : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900/10'
                           }`}
                         >
-                          <span className="text-xs font-semibold text-slate-200 line-clamp-2 leading-snug">{cat.name}</span>
+                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 leading-snug">{cat.name}</span>
                           <div className="mt-2 flex items-center justify-between">
                             <span className="text-xs font-mono font-semibold text-slate-500">Score</span>
-                            <span className={`text-sm font-mono font-black ${isActive ? currentTheme.text : 'text-slate-300'}`}>{cat.score}/{cat.maxScore}</span>
+                            <span className={`text-sm font-mono font-black ${isActive ? currentTheme.text : 'text-slate-600 dark:text-slate-300'}`}>{cat.score}/{cat.maxScore}</span>
                           </div>
                         </button>
                       );
@@ -415,22 +445,22 @@ Generated by the Mock Interview Arena.`;
 
                   {/* Detail Pane for Active Category */}
                   {reportCard.categories[activeCategoryIndex] && (
-                    <div className="p-6 rounded-xl bg-slate-950/20 border border-slate-800 space-y-4 animate-[fadeIn_0.2s_ease-out] print:bg-transparent print:border-slate-300">
+                    <div className="p-6 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 space-y-4 animate-[fadeIn_0.2s_ease-out] print:bg-transparent print:border-slate-300">
                       <div>
-                        <h4 className="text-sm font-bold text-slate-200">{reportCard.categories[activeCategoryIndex].name} Detailed Assessment</h4>
-                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">{reportCard.categories[activeCategoryIndex].feedback}</p>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">{reportCard.categories[activeCategoryIndex].name} Detailed Assessment</h4>
+                        <p className="text-xs text-slate-650 dark:text-slate-400 mt-1 leading-relaxed">{reportCard.categories[activeCategoryIndex].feedback}</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                         {/* Strengths */}
                         <div className="space-y-2">
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             Observed Strengths
                           </span>
                           <ul className="space-y-1.5">
                             {reportCard.categories[activeCategoryIndex].strengths.map((str, idx) => (
-                              <li key={idx} className="text-xs text-slate-300 flex items-start gap-2">
+                              <li key={idx} className="text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2">
                                 <span className="text-emerald-500 mt-0.5">✓</span>
                                 <span>{str}</span>
                               </li>
@@ -443,13 +473,13 @@ Generated by the Mock Interview Arena.`;
 
                         {/* Improvements */}
                         <div className="space-y-2">
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-550" />
                             Areas for Improvement
                           </span>
                           <ul className="space-y-1.5">
                             {reportCard.categories[activeCategoryIndex].improvements.map((imp, idx) => (
-                              <li key={idx} className="text-xs text-slate-300 flex items-start gap-2">
+                              <li key={idx} className="text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2">
                                 <span className="text-amber-500 mt-0.5">→</span>
                                 <span>{imp}</span>
                               </li>
@@ -467,7 +497,7 @@ Generated by the Mock Interview Arena.`;
                 {/* Core Competency Assessment (Print View - Full details listed vertically) */}
                 <div className="hidden print:block space-y-6">
                   <div className="flex items-center gap-2 border-b border-slate-300 pb-2">
-                    <span className="w-1.5 h-3 bg-indigo-750 rounded-sm" />
+                    <span className="w-1.5 h-3 bg-indigo-755 rounded-sm" />
                     <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-slate-900">Core Competency Assessment</h3>
                   </div>
                   <div className="grid grid-cols-1 gap-6">
@@ -493,7 +523,7 @@ Generated by the Mock Interview Arena.`;
                             </ul>
                           </div>
                           <div className="space-y-1">
-                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-850">Areas for Improvement</span>
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-855">Areas for Improvement</span>
                             <ul className="space-y-1">
                               {cat.improvements.map((imp, iIdx) => (
                                 <li key={iIdx} className="text-xs text-slate-800 flex items-start gap-2">
@@ -515,32 +545,32 @@ Generated by the Mock Interview Arena.`;
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <span className="w-1.5 h-3 bg-indigo-500 rounded-sm" />
-                      <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-slate-400">Technical Skills & Profile Alignment</h3>
+                      <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-slate-650 dark:text-slate-400">Technical Skills & Profile Alignment</h3>
                     </div>
                     
-                    <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20 print:border-slate-300">
+                    <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/20 print:border-slate-300">
                       <table className="w-full text-left border-collapse text-xs">
                         <thead>
-                          <tr className="bg-slate-950/60 border-b border-slate-800 print:bg-slate-105 print:border-slate-300 print:text-slate-900">
-                            <th className="p-3 font-mono uppercase tracking-wider text-[10px] font-bold text-slate-450">Skill / Tech Stack</th>
-                            <th className="p-3 font-mono uppercase tracking-wider text-[10px] font-bold text-slate-455">Observed Proficiency</th>
-                            <th className="p-3 font-mono uppercase tracking-wider text-[10px] font-bold text-slate-460">Analysis & Alignment Comments</th>
+                          <tr className="bg-slate-100 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 print:bg-slate-105 print:border-slate-300 print:text-slate-900">
+                            <th className="p-3 font-mono uppercase tracking-wider text-[10px] font-bold text-slate-600 dark:text-slate-455">Skill / Tech Stack</th>
+                            <th className="p-3 font-mono uppercase tracking-wider text-[10px] font-bold text-slate-600 dark:text-slate-455">Observed Proficiency</th>
+                            <th className="p-3 font-mono uppercase tracking-wider text-[10px] font-bold text-slate-600 dark:text-slate-460">Analysis & Alignment Comments</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/60 print:divide-slate-300">
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 print:divide-slate-300">
                           {reportCard.skillsMatrix.map((skill, idx) => (
-                            <tr key={idx} className="hover:bg-slate-900/10 transition-colors">
-                              <td className="p-3 font-mono font-semibold text-slate-200 print:text-slate-900">{skill.skill}</td>
+                            <tr key={idx} className="hover:bg-slate-100/20 dark:hover:bg-slate-900/10 transition-colors">
+                              <td className="p-3 font-mono font-semibold text-slate-900 dark:text-slate-200 print:text-slate-900">{skill.skill}</td>
                               <td className="p-3">
                                 <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
-                                  skill.proficiency === 'Advanced' ? 'bg-indigo-950/55 text-indigo-300 border border-indigo-500/20 print:bg-indigo-100 print:text-indigo-800' :
-                                  skill.proficiency === 'Intermediate' ? 'bg-cyan-950/55 text-cyan-300 border border-cyan-500/20 print:bg-cyan-100 print:text-cyan-800' :
-                                  'bg-slate-950 text-slate-400 border border-slate-800 print:bg-slate-100 print:text-slate-700'
+                                  skill.proficiency === 'Advanced' ? 'bg-indigo-50 dark:bg-indigo-950/55 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20 print:bg-indigo-100 print:text-indigo-800' :
+                                  skill.proficiency === 'Intermediate' ? 'bg-cyan-50 dark:bg-cyan-950/55 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/20 print:bg-cyan-100 print:text-cyan-800' :
+                                  'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 print:bg-slate-100 print:text-slate-700'
                                 }`}>
                                   {skill.proficiency}
                                 </span>
                               </td>
-                              <td className="p-3 text-slate-400 leading-relaxed print:text-slate-800">{skill.comments}</td>
+                              <td className="p-3 text-slate-600 dark:text-slate-400 leading-relaxed print:text-slate-800">{skill.comments}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -553,29 +583,29 @@ Generated by the Mock Interview Arena.`;
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-3 bg-indigo-500 rounded-sm" />
-                    <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-slate-400">Round-by-Round Breakdown</h3>
+                    <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Round-by-Round Breakdown</h3>
                   </div>
                   
-                  <div className="space-y-3 relative before:absolute before:top-2 before:bottom-2 before:left-[15px] before:w-0.5 before:bg-slate-800 print:before:bg-slate-300">
+                  <div className="space-y-3 relative before:absolute before:top-2 before:bottom-2 before:left-[15px] before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800 print:before:bg-slate-300">
                     {reportCard.timelineFeedback.map((round, idx) => {
                       const isImpactPositive = round.scoreImpact.startsWith('+');
                       const isImpactNeutral = round.scoreImpact.includes('0') || round.scoreImpact.includes('neutral');
                       const impactColor = isImpactPositive 
-                        ? 'text-emerald-400 bg-emerald-950/20 border-emerald-500/10 print:text-emerald-800 print:bg-emerald-50' 
-                        : (isImpactNeutral ? 'text-slate-400 bg-slate-950 border-slate-800 print:text-slate-800 print:bg-slate-100' : 'text-red-400 bg-red-950/20 border-red-500/10 print:text-red-800 print:bg-red-50');
+                        ? 'text-emerald-650 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-500/10 print:text-emerald-800 print:bg-emerald-55' 
+                        : (isImpactNeutral ? 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 print:text-slate-805 print:bg-slate-105' : 'text-red-650 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-500/10 print:text-red-800 print:bg-red-55');
                         
                       return (
                         <div key={idx} className="relative pl-9">
                           {/* Timeline dot */}
-                          <div className={`absolute left-[7px] top-3.5 w-[18px] h-[18px] rounded-full border-2 bg-slate-950 flex items-center justify-center text-[9px] font-mono font-bold print:border-slate-400 print:bg-slate-100 print:text-slate-900 ${
-                            isImpactPositive ? 'border-emerald-500 text-emerald-400' : 'border-slate-800 text-slate-500'
+                          <div className={`absolute left-[7px] top-3.5 w-[18px] h-[18px] rounded-full border-2 bg-white dark:bg-slate-950 flex items-center justify-center text-[9px] font-mono font-bold print:border-slate-400 print:bg-slate-100 print:text-slate-900 ${
+                            isImpactPositive ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-slate-200 dark:border-slate-800 text-slate-450 dark:text-slate-500'
                           }`}>
                             {idx + 1}
                           </div>
                           
-                          <div className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/20 space-y-2 hover:border-slate-700/60 transition-colors print:border-slate-300">
+                          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/20 space-y-2 hover:border-slate-350 dark:hover:border-slate-700/60 transition-colors print:border-slate-300">
                             <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-2">
-                              <h5 className="font-bold text-slate-200 text-xs print:text-slate-900">
+                              <h5 className="font-bold text-slate-900 dark:text-slate-200 text-xs print:text-slate-900">
                                 Round {idx + 1} Assessment
                               </h5>
                               <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-black border ${impactColor}`}>
@@ -584,11 +614,11 @@ Generated by the Mock Interview Arena.`;
                             </div>
                             
                             <div className="space-y-1 text-xs">
-                              <p className="text-slate-400 italic print:text-slate-700">
-                                <span className="font-mono text-slate-600 not-italic select-none mr-1.5 print:text-slate-800">Answer Summary:</span>
+                              <p className="text-slate-550 dark:text-slate-400 italic print:text-slate-700">
+                                <span className="font-mono text-slate-500 dark:text-slate-600 not-italic select-none mr-1.5 print:text-slate-800">Answer Summary:</span>
                                 {round.candidateAnswerSummary}
                               </p>
-                              <p className="text-slate-300 leading-relaxed print:text-slate-900">
+                              <p className="text-slate-800 dark:text-slate-300 leading-relaxed print:text-slate-900">
                                 <span className="font-mono text-slate-500 select-none mr-1.5 print:text-slate-800">Evaluation Critique:</span>
                                 {round.critique}
                               </p>
@@ -602,18 +632,25 @@ Generated by the Mock Interview Arena.`;
               </div>
 
               {/* Action Buttons Row */}
-              <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-950/20 p-6 print:hidden">
-                <div className="flex gap-3 w-full sm:w-auto">
+              <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-100/50 dark:bg-slate-950/20 p-6 print:hidden">
+                <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+                  <button
+                    onClick={() => dispatch({ type: 'RESET' })}
+                    className="px-4 py-2.5 rounded-lg border border-slate-250 dark:border-slate-700 hover:border-slate-450 dark:hover:border-slate-505 bg-white dark:bg-slate-900 text-slate-750 dark:text-slate-350 text-xs font-mono font-bold tracking-wider hover:text-slate-900 dark:hover:text-slate-100 transition-all flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center select-none shadow-sm"
+                  >
+                    ← BACK TO MAIN
+                  </button>
+
                   <button
                     onClick={handleCopyMarkdown}
-                    className="px-4 py-2.5 rounded-lg border border-slate-700 hover:border-slate-500 bg-slate-900 text-slate-300 text-xs font-mono font-bold tracking-wider hover:text-slate-100 transition-all flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center select-none"
+                    className="px-4 py-2.5 rounded-lg border border-slate-250 dark:border-slate-700 hover:border-slate-450 dark:hover:border-slate-500 bg-white dark:bg-slate-900 text-slate-750 dark:text-slate-300 text-xs font-mono font-bold tracking-wider hover:text-slate-900 dark:hover:text-slate-100 transition-all flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center select-none shadow-sm"
                   >
                     <span>{copied ? '✓ COPIED!' : '📋 COPY MARKDOWN'}</span>
                   </button>
 
                   <button
                     onClick={() => window.print()}
-                    className="px-4 py-2.5 rounded-lg border border-slate-750 hover:border-slate-600 bg-slate-900 text-slate-400 text-xs font-mono font-bold tracking-wider hover:text-slate-200 transition-all flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center select-none"
+                    className="px-4 py-2.5 rounded-lg border border-slate-250 dark:border-slate-750 hover:border-slate-400 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-xs font-mono font-bold tracking-wider hover:text-slate-850 dark:hover:text-slate-200 transition-all flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center select-none shadow-sm"
                   >
                     🖨️ PRINT PDF
                   </button>
@@ -636,4 +673,4 @@ Generated by the Mock Interview Arena.`;
       )}
     </div>
   );
-}
+};

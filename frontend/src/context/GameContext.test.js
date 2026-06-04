@@ -15,6 +15,7 @@ describe('GameContext - gameReducer State Transitions', () => {
       candidateProfile: '',
       reportCard: null,
       isGeneratingReport: false,
+      theme: 'dark',
     });
   });
 

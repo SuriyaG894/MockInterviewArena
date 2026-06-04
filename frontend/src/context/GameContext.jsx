@@ -15,10 +15,21 @@ export const initialState = {
   candidateProfile: '',
   reportCard: null,
   isGeneratingReport: false,
+  theme: (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) || 'dark',
 };
 
 export function gameReducer(state, action) {
   switch (action.type) {
+    case 'TOGGLE_THEME': {
+      const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('theme', nextTheme);
+      }
+      return {
+        ...state,
+        theme: nextTheme,
+      };
+    }
     case 'START_TURN':
       return {
         ...state,

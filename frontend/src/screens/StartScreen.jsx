@@ -104,41 +104,51 @@ export default function StartScreen() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#070a13] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-950 via-slate-900 to-[#070a13] p-6 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-[#070a13] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50/60 dark:from-slate-950 via-slate-50 dark:via-slate-900 to-zinc-100 dark:to-[#070a13] p-6 relative overflow-hidden transition-colors duration-300">
+      {/* Theme Toggle */}
+      <div className="absolute top-6 right-6 z-20">
+        <button
+          onClick={() => dispatch({ type: 'TOGGLE_THEME' })}
+          className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all cursor-pointer shadow-sm dark:shadow-md select-none flex items-center gap-2 text-xs font-mono font-bold"
+        >
+          {gameState.theme === 'dark' ? '☀️ LIGHT MODE' : '🌙 DARK MODE'}
+        </button>
+      </div>
+
       {/* Background Grid & Blur Details */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b0b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b0b_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a05_1px,transparent_1px),linear-gradient(to_bottom,#0f172a05_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b0b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b0b_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
       <div className="text-center z-10 max-w-2xl mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest mb-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-xs font-mono font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-widest mb-4">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-500 animate-pulse" />
           Interactive System Simulator v1.0
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white mb-3 bg-gradient-to-r from-slate-50 via-white to-slate-400 bg-clip-text text-transparent">
+        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white mb-3 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 dark:from-slate-50 dark:via-white dark:to-slate-400 bg-clip-text text-transparent">
           The Mock Arena
         </h1>
-        <p className="text-slate-400 text-base sm:text-lg">
+        <p className="text-slate-600 dark:text-slate-400 text-base sm:text-lg">
           Select an interviewer profile to initiate the evaluation simulation.
         </p>
       </div>
 
       {/* Target Difficulty Selector */}
       <div className="z-10 flex flex-col items-center gap-3 mb-10">
-        <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+        <span className="text-[10px] font-mono font-bold text-slate-550 dark:text-slate-500 uppercase tracking-widest">
           Target Difficulty Protocol
         </span>
-        <div className="flex p-1 rounded-xl bg-slate-950/60 border border-slate-800/80 backdrop-blur-md relative">
+        <div className="flex p-1 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 backdrop-blur-md relative shadow-sm dark:shadow-none">
           {['easy', 'medium', 'hard'].map((level) => {
             const active = gameState.difficulty === level;
             let activeStyle = '';
             if (active) {
-              if (level === 'easy') activeStyle = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]';
-              else if (level === 'medium') activeStyle = 'bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]';
-              else activeStyle = 'bg-rose-500/10 border-rose-500/30 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.15)]';
+              if (level === 'easy') activeStyle = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shadow-[0_2px_15px_rgba(16,185,129,0.1)] dark:shadow-[0_0_15px_rgba(16,185,129,0.15)]';
+              else if (level === 'medium') activeStyle = 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400 shadow-[0_2px_15px_rgba(245,158,11,0.1)] dark:shadow-[0_0_15px_rgba(245,158,11,0.15)]';
+              else activeStyle = 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 shadow-[0_2px_15px_rgba(244,63,94,0.1)] dark:shadow-[0_0_15px_rgba(244,63,94,0.15)]';
             } else {
-              activeStyle = 'border-transparent text-slate-500 hover:text-slate-300';
+              activeStyle = 'border-transparent text-slate-450 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300';
             }
             return (
               <button
@@ -159,7 +169,7 @@ export default function StartScreen() {
       {/* Candidate Profile / Resume Context */}
       <div className="z-10 w-full max-w-xl flex flex-col gap-3 mb-10">
         <div className="flex justify-between items-center px-1">
-          <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] font-mono font-bold text-slate-550 dark:text-slate-500 uppercase tracking-widest">
             Candidate Profile Protocol (Resume / Keywords)
           </span>
           <input
@@ -174,8 +184,8 @@ export default function StartScreen() {
             onClick={() => fileInputRef.current?.click()}
             className={`px-3 py-1 rounded border text-[9px] font-mono font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
               uploadStatus === 'uploading'
-                ? 'bg-slate-800/40 border-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-500/30 shadow-inner'
+                ? 'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-400 cursor-not-allowed'
+                : 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20 text-indigo-650 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:border-indigo-200 dark:hover:border-indigo-500/30 shadow-sm dark:shadow-inner'
             }`}
           >
             {uploadStatus === 'uploading' ? 'Analyzing...' : 'Upload PDF/DOCX'}
@@ -188,21 +198,21 @@ export default function StartScreen() {
           onChange={(e) => setProfileInput(e.target.value)}
           placeholder='Paste your resume text or upload your PDF/Word document to extract technical details and dynamically tailor the interview focus...'
           rows={3}
-          className="w-full bg-slate-950/60 text-slate-100 font-mono text-xs border border-slate-800/80 rounded-xl px-4 py-3 resize-none focus:outline-none transition-all placeholder:text-slate-600 focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/10 backdrop-blur-md leading-relaxed shadow-inner"
+          className="w-full bg-white dark:bg-slate-950/60 text-slate-900 dark:text-slate-100 font-mono text-xs border border-slate-200 dark:border-slate-800/80 rounded-xl px-4 py-3 resize-none focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-indigo-550 dark:focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/10 backdrop-blur-md leading-relaxed shadow-sm dark:shadow-inner"
         />
 
         {uploadStatus === 'uploading' && (
-          <span className="text-[9px] font-mono text-indigo-400 uppercase tracking-widest animate-pulse px-1">
+          <span className="text-[9px] font-mono text-indigo-600 dark:text-indigo-400 uppercase tracking-widest animate-pulse px-1">
             ⌁ [EXTRACTING PROFILE CONTEXT & CLASSIFYING DOCUMENT...]
           </span>
         )}
         {uploadStatus === 'success' && (
-          <span className="text-[9px] font-mono text-emerald-400 uppercase tracking-widest px-1">
+          <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 uppercase tracking-widest px-1">
             ✓ [RESUME VERIFIED & PARSED SUCCESSFULLY]
           </span>
         )}
         {uploadStatus === 'error' && (
-          <span className="text-[9px] font-mono text-rose-500 uppercase tracking-widest px-1">
+          <span className="text-[9px] font-mono text-rose-600 dark:text-rose-500 uppercase tracking-widest px-1">
             ✗ [UPLOAD FAILED: {uploadError}]
           </span>
         )}
@@ -211,8 +221,24 @@ export default function StartScreen() {
       {/* Cards */}
       <div className="flex gap-8 flex-wrap justify-center z-10 max-w-4xl w-full">
         {BOSSES.map((boss) => {
-          const borderHover = boss.theme?.borderHover || 'hover:border-slate-500/80 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]';
-          const tagColor = boss.theme?.tagColor || 'bg-slate-950/30 text-slate-300 border-slate-500/10';
+          const isLight = gameState.theme === 'light';
+          const borderHover = isLight
+            ? {
+                indigo: 'hover:border-indigo-400 hover:shadow-[0_4px_25px_rgba(99,102,241,0.12)]',
+                rose: 'hover:border-rose-450 hover:shadow-[0_4px_25px_rgba(244,63,94,0.12)]',
+                amber: 'hover:border-amber-450 hover:shadow-[0_4px_25px_rgba(245,158,11,0.12)]',
+                teal: 'hover:border-teal-450 hover:shadow-[0_4px_25px_rgba(20,184,166,0.12)]',
+              }[boss.theme?.color || 'indigo']
+            : (boss.theme?.borderHover || 'hover:border-slate-500/80 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]');
+
+          const tagColor = isLight
+            ? {
+                indigo: 'bg-indigo-50 text-indigo-650 border-indigo-200/60',
+                rose: 'bg-rose-50 text-rose-650 border-rose-200/60',
+                amber: 'bg-amber-50 text-amber-700 border-amber-250/60',
+                teal: 'bg-teal-50 text-teal-700 border-teal-250/60',
+              }[boss.theme?.color || 'indigo']
+            : (boss.theme?.tagColor || 'bg-slate-950/30 text-slate-300 border-slate-500/10');
           const cardLoading = isStarting === boss.id;
 
           return (
@@ -220,13 +246,13 @@ export default function StartScreen() {
               key={boss.id}
               onClick={() => selectBoss(boss)}
               disabled={isStarting !== null}
-              className={`w-80 sm:w-92 p-6 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md flex flex-col gap-4 text-left transition-all duration-300 transform hover:-translate-y-1 cursor-pointer ${
+              className={`w-80 sm:w-92 p-6 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 backdrop-blur-md flex flex-col gap-4 text-left transition-all duration-300 transform hover:-translate-y-1 cursor-pointer shadow-sm dark:shadow-none ${
                 isStarting !== null ? 'opacity-60 cursor-not-allowed' : borderHover
               }`}
             >
               <div className="flex justify-between items-start w-full">
-                <span className="text-3xl p-2.5 bg-slate-950/50 border border-slate-850 rounded-xl shadow-inner">{boss.icon}</span>
-                <span className="text-xs font-mono font-bold bg-slate-950/60 border border-slate-850/60 px-2 py-0.5 rounded text-slate-400">
+                <span className="text-3xl p-2.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-850 rounded-xl shadow-sm dark:shadow-inner">{boss.icon}</span>
+                <span className="text-xs font-mono font-bold bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-850/60 px-2 py-0.5 rounded text-slate-650 dark:text-slate-400">
                   DIFF: {boss.difficulty}
                 </span>
               </div>
@@ -238,22 +264,22 @@ export default function StartScreen() {
                     <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span className="text-[10px] font-mono text-indigo-400 uppercase tracking-widest animate-pulse">
+                  <span className="text-[10px] font-mono text-indigo-650 dark:text-indigo-400 uppercase tracking-widest animate-pulse">
                     Generating protocol...
                   </span>
                 </div>
               ) : (
                 <>
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide">
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-wide">
                       {boss.title}
                     </h2>
-                    <p className="text-xs text-slate-400/80 mt-2 leading-relaxed min-h-[50px]">
+                    <p className="text-xs text-slate-600 dark:text-slate-400/80 mt-2 leading-relaxed min-h-[50px]">
                       {boss.description}
                     </p>
                   </div>
 
-                  <div className="w-full h-[1px] bg-slate-800/40" />
+                  <div className="w-full h-[1px] bg-slate-200 dark:bg-slate-800/40" />
 
                   <div className="flex flex-col gap-2">
                     <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">Specialties</span>
