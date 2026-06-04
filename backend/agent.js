@@ -321,9 +321,9 @@ CRITICAL INSTRUCTIONS FOR DIFFICULTY STABILITY:
   // Inject strict domain restrictions for EASY, MEDIUM, and HARD modes
   if (difficulty === "easy") {
     systemPrompt += `\n\nSTRICT INTERVIEWER BOUNDARIES FOR EASY MODE:
-- As the Nitpicking System Architect: Focus only on basic CRUD endpoints, simple database tables, or simple client-server concepts. DO NOT ask about Paxos/Raft consensus, multi-region database sharding, saga design patterns, or distributed queues.
+- As the Nitpicking System Architect: Focus only on basic CRUD endpoints, simple database tables, or simple client-server concepts. DO NOT ask about database scalability, Paxos/Raft consensus, multi-region database sharding, saga design patterns, distributed queues, or performance tuning.
 - As the Chaotic Startup CTO: Focus only on basic code logic, simple unit testing (positive/negative assertions), or standard code style/comments. DO NOT ask about CI/CD pipeline structures, dependency injection containers, or complex architectural refactoring.
-- As the Pedantic Product Manager: Focus only on basic user features, simple user feedback, or basic prioritization. DO NOT ask about statistical significance in A/B tests or complex roadmap dependencies.
+- As the Pedantic Product Manager: Focus only on basic user features, simple user feedback, or basic prioritization. DO NOT ask about database scalability, billion-row datasets, data aggregation strategy, statistical significance in A/B tests, or complex roadmap dependencies.
 - As the Rigorous QA Lead: Focus only on manual QA/testing topics (defect lifecycle, simple bug logging, priority vs severity, or basic data validations). DO NOT ask about automation frameworks, Unicode normalization, ICU libraries, hidden/invisible characters, or performance/load testing.
 
 EASY MODE FOLLOW-UP PROGRESSION (STACK-NEUTRAL):
@@ -372,6 +372,15 @@ The candidate claims to have this specific background:
 
 You MUST cross-examine their answers against their claimed stack and technologies while strictly preserving your character persona rules. If they say they are an expert in Java, grill them on concurrency or JVM memory. If they claim to know automated testing, attack their validation strategies. Critically evaluate whether their proposed solution aligns with or leverages their background appropriately, or if they are failing to apply their claimed skills.`;
   }
+
+  systemPrompt += `
+
+CRITICAL DAMAGE ASSIGNMENT RULES:
+- For EVERY turn where the candidate provides a substantive technical answer, you MUST choose either "player" or "boss" for the "damageTo" field.
+- You are STRICTLY PROHIBITED from setting "damageTo" to "none" or "damageAmount" to 0 for a technical response. Setting damageTo to "none" and damageAmount to 0 is ONLY permitted if the candidate's response is completely empty, conversational chit-chat, or completely off-topic.
+- If the candidate's answer is correct or shows reasonable understanding (applying lenient grading for EASY, standard for MEDIUM, and strict for HARD), you MUST set "damageTo" to "boss" and "damageAmount" to a value between 15 and 50.
+- If the candidate's answer is flawed, incorrect, or misses key elements (applying lenient grading for EASY, standard for MEDIUM, and strict for HARD), you MUST set "damageTo" to "player" and "damageAmount" to a value between 15 and 50.
+- Ensure that HP is dynamically and consistently reduced on either side to maintain an engaging, fast-paced game.`;
 
   const historyText = summarizeBattleLog(battleLog);
   if (historyText) {
@@ -478,6 +487,27 @@ ${JSON.stringify(battleLog, null, 2)}
 
 Your task is to perform a comprehensive post-game technical evaluation of the candidate's answers and generate a Candidate Feedback Matrix (Technical Report Card).
 
+==================================================
+DIFFICULTY-ALIGNED GRADING STANDARDS (${difficulty.toUpperCase()}):
+You MUST calibrate your grading criteria, category scores, and proficiency ratings to align with the active difficulty tier (${difficulty.toUpperCase()}):
+
+- EASY Mode:
+  - Expect only fundamental, entry-level concepts. 
+  - Do NOT penalize or deduct points in any category (including "System Scalability & SPOFs") for the omission of advanced architectures, distributed scaling, sharding, replication, or performance profiling.
+  - Specifically, for the "System Scalability & SPOFs" category, you MUST assign a score of at least 4/5 if their proposed solution is correct for a small or local dataset. You are prohibited from assigning a score below 4/5 in this category in EASY mode unless their basic design is functionally incorrect, broken, or contains severe logical bugs.
+  - If a candidate provides correct beginner/intermediate level answers (e.g., simple SQL joins, date conversions, handling duplicates/nulls, basic expected results), they should receive high scores (4/5 or 5/5) in all categories relative to the EASY baseline.
+  - In the "skillsMatrix", evaluate proficiency relative to entry-level expectations. A candidate showing solid intermediate SQL capabilities (e.g., using functions, filters, and null checks) must NOT be rated as "Beginner"; rate them as "Intermediate" or "Advanced" for this tier.
+  
+- MEDIUM Mode:
+  - Expect standard mid-level trade-offs, standard edge cases, and solid component-level design.
+  - Do not expect principal-level optimizations, distributed consensus protocols, or highly complex security exploit remediations unless the dialogue explicitly focused on them.
+  - Calibrate the skills matrix and category scores against a standard developer baseline.
+
+- HARD Mode:
+  - Grade with extreme rigor, demanding senior/principal-level engineering expertise.
+  - Candidacy must show deep understanding of scalability, concurrency, security vulnerabilities, database deadlocks, and system trade-offs. Deduct points heavily if they omit these advanced concerns.
+==================================================
+
 CRITICAL SKILLS EXTRACTION INSTRUCTIONS:
 - Identify 3-5 key technical skills, tools, or frameworks dynamically based on the candidate's profile/resume and the actual interview rounds. 
 - If no profile was provided, extract them from the core topics tested. 
@@ -542,6 +572,11 @@ Analyze the conversation step-by-step and output a valid JSON object matching th
   ]
 }
 
+TIMELINE FEEDBACK CONSTRAINTS:
+- You MUST generate exactly one entry in the "timelineFeedback" array for each player answer (entries where sender is "player") in the provided dialogue log.
+- Do NOT hallucinate, invent, or append any extra rounds that are not present in the dialogue history. For example, if the candidate only answered 1 question, there must be exactly 1 entry in the "timelineFeedback" array. If they answered 2 questions, there must be exactly 2 entries.
+- If there are no player answers in the log at all, return an empty array for "timelineFeedback".
+
 Ensure the output is ONLY a valid JSON object. Do not include markdown code fences, trailing commas, or any other extra text.`;
 
   try {
@@ -558,8 +593,15 @@ Ensure the output is ONLY a valid JSON object. Do not include markdown code fenc
     }
     const report = JSON.parse(jsonStr);
 
-    // Normalize turnIndex in timelineFeedback to be strictly sequential (1, 2, 3...)
+    const playerTurnCount = battleLog.filter(
+      (m) => m && ["player", "candidate", "user"].includes((m.sender || "").toLowerCase())
+    ).length;
+
+    // Normalize and truncate turnIndex in timelineFeedback to match the actual number of player turns
     if (report && Array.isArray(report.timelineFeedback)) {
+      if (report.timelineFeedback.length > playerTurnCount) {
+        report.timelineFeedback = report.timelineFeedback.slice(0, playerTurnCount);
+      }
       report.timelineFeedback.forEach((tf, index) => {
         tf.turnIndex = index + 1;
       });

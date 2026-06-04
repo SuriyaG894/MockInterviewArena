@@ -74,6 +74,13 @@ export function gameReducer(state, action) {
         difficulty: action.payload,
       };
 
+    case 'END_GAME':
+      return {
+        ...state,
+        gameStatus: 'GAMEOVER',
+        isProcessing: false,
+      };
+
     case 'RESET':
       return { ...initialState };
 
