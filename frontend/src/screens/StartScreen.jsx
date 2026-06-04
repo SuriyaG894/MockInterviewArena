@@ -51,7 +51,11 @@ export default function StartScreen() {
       setUploadStatus('success');
     } catch (err) {
       setUploadStatus('error');
-      setUploadError(err.message || 'Verification failed. Please try again.');
+      if (err.message && (err.message.includes('Failed to fetch') || err.message.includes('fetch'))) {
+        setUploadError('Backend server is offline.');
+      } else {
+        setUploadError(err.message || 'Verification failed. Please try again.');
+      }
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';

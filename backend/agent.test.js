@@ -455,4 +455,74 @@ describe("Mock Interview Arena API Tests", () => {
       ).rejects.toThrow("The document is a restaurant receipt for coffee and pastries.");
     });
   });
+
+  describe("Report Card Generation logic", () => {
+    it("should successfully generate a report card for a combat session", async () => {
+      const mockReport = {
+        overallVerdict: {
+          status: "PASS",
+          overallScore: 85,
+          summary: "Great job overall. You scale well.",
+        },
+        categories: [
+          {
+            name: "Technical Accuracy & Logic",
+            score: 4,
+            maxScore: 5,
+            feedback: "Solid explanation.",
+            strengths: ["Clean logic"],
+            improvements: ["Detail performance bounds"],
+          },
+        ],
+        skillsMatrix: [
+          {
+            skill: "System Design",
+            proficiency: "Advanced",
+            status: "Targeted",
+            comments: "Demonstrated scalability awareness.",
+          },
+        ],
+        timelineFeedback: [
+          {
+            turnIndex: 1,
+            candidateAnswerSummary: "Proposed microservices.",
+            scoreImpact: "+10",
+            critique: "Excellent approach.",
+          },
+        ],
+      };
+
+      getCompletion.mockResolvedValueOnce(JSON.stringify(mockReport));
+
+      const response = await request(app)
+        .post("/api/battle/report")
+        .send({
+          bossId: "architect",
+          battleLog: [
+            { sender: "player", text: "I will use microservices and database sharding." },
+            { sender: "boss", text: "How will you handle split-brain in your shard setup?" },
+          ],
+          difficulty: "hard",
+          candidateProfile: "Backend architect",
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(mockReport);
+      expect(getCompletion).toHaveBeenCalledTimes(1);
+      const prompt = getCompletion.mock.calls[0][0];
+      expect(prompt).toContain("nitpicking System Architect");
+      expect(prompt).toContain("Candidate Feedback Matrix");
+    });
+
+    it("should return 400 if bossId or battleLog is missing or invalid", async () => {
+      const response = await request(app)
+        .post("/api/battle/report")
+        .send({
+          bossId: "cto",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("bossId and battleLog are required");
+    });
+  });
 });

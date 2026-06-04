@@ -183,14 +183,23 @@ async function generateChallenge(bossId, difficulty, candidateProfile) {
   let systemPrompt = `You are a ${profile.title} interviewing a candidate.
 Your job is to generate a single technical interview question.
 The question difficulty MUST match: ${difficulty.toUpperCase()}.
-- EASY: A straightforward conceptual question or simple code design challenge.
-- MEDIUM: A standard, realistic interview scenario with some complexity and edge cases.
-- HARD: A highly complex, multi-layered problem involving scaling, race conditions, advanced failure modes, or security risks.
+
+CRITICAL DIFFICULTY RULES:
+- EASY: Generate a straightforward conceptual question or a very basic scenario. It must be entry-level, simple, and must NOT require complex architectures, scaling strategies, automation frameworks, or distributed systems orchestration. Keep it focused on basic principles (e.g., explaining a single concept, writing a simple manual test case, or designing a single endpoint).
+- MEDIUM: Generate a standard, realistic interview scenario. It should involve common mid-level trade-offs, standard edge cases, and design of simple features.
+- HARD: Generate a highly complex, senior-level/principal-level problem. It must involve scaling, race conditions, advanced failure modes, security vulnerabilities, or deep low-level optimization.
 
 The question must focus on: ${profile.specialties}.`;
 
   if (candidateProfile && typeof candidateProfile === "string" && candidateProfile.trim().length > 0) {
-    systemPrompt += `\n\nTHE CANDIDATE PROFILE / BACKGROUND:\nThe candidate claims to have this specific background:\n"${candidateProfile.trim()}"\n\nYou MUST dynamically tailor the generated question to target their claimed skills and background while strictly preserving your character persona rules. For example, if they specialize in Java and databases, ask a Java/database scaling challenge. If they specialize in QA testing, ask about quality automation bottlenecks.`;
+    systemPrompt += `\n\nTHE CANDIDATE PROFILE / BACKGROUND:
+The candidate claims to have this specific background:
+"${candidateProfile.trim()}"
+
+You MUST dynamically tailor the generated question to target their claimed skills and background, but you MUST adjust the depth of the question to match the active difficulty setting (${difficulty.toUpperCase()}):
+- For EASY difficulty: Ask a fundamental conceptual question or a very basic task aligned with their background. For example, if they are a manual tester, ask about simple manual test case design; if they use Java, ask about basic object-oriented concepts or simple API creation. Do NOT ask them about scaling, complex performance tuning, or automation frameworks.
+- For MEDIUM difficulty: Ask a standard real-world scenario with typical mid-level engineering trade-offs or edge cases relevant to their background.
+- For HARD difficulty: Ask a highly complex, senior-level problem involving scale, concurrency bottlenecks, security holes, or advanced failures in their technologies.`;
   }
 
   systemPrompt += `\n\nReturn ONLY a valid JSON object matching this schema:
@@ -231,7 +240,24 @@ Do not return any surrounding text, markdown, or code fences.`;
   }
 }
 
-async function evaluateTurn(bossId, userResponse, difficulty = "medium", candidateProfile) {
+function summarizeBattleLog(battleLog) {
+  if (!battleLog || !Array.isArray(battleLog) || battleLog.length === 0) {
+    return "";
+  }
+  const intactCount = 2;
+  const compressed = battleLog.map((entry, index) => {
+    const isRecent = index >= battleLog.length - intactCount;
+    const role = entry.sender === "boss" ? "Interviewer" : "Candidate";
+    let text = entry.text || "";
+    if (!isRecent && text.length > 120) {
+      text = text.substring(0, 120) + "... [truncated]";
+    }
+    return `${role}: ${text}`;
+  });
+  return compressed.join("\n");
+}
+
+async function evaluateTurn(bossId, userResponse, difficulty = "medium", candidateProfile, battleLog) {
   if (!userResponse || typeof userResponse !== "string") {
     return {
       dialogue: "You provided an empty response. The arena expects an answer.",
@@ -250,16 +276,55 @@ async function evaluateTurn(bossId, userResponse, difficulty = "medium", candida
     };
   }
 
-  let systemPrompt =
-    BOSS_PROMPTS[bossId] || getDefaultPrompt();
+  let basePrompt = BOSS_PROMPTS[bossId] || getDefaultPrompt();
+  // Strip the conflicting static damage rules to prevent conflict with the active difficulty setting
+  basePrompt = basePrompt.replace(/CRITICAL RULES FOR DAMAGE SELECTION:[\s\S]*$/, "");
 
-  systemPrompt += `
+  if (difficulty === "easy") {
+    // Strip the pre-existing complex analysis steps to prevent the LLM from grading on advanced criteria
+    basePrompt = basePrompt.replace(/Analyze in this order:[\s\S]*?(?=Return ONLY valid JSON|$)/i, 
+      `Analyze in this order:
+1. **Basic Correctness & Concept** — Does the candidate understand the basic conceptual question? Does their response make logical sense for a beginner?
+2. **General Understanding** — Have they answered the simple question directly, even if they omitted advanced edge cases, scaling, or systems architecture?
+3. **Damage score** — If they show a basic correct concept, they MUST deal damage to the boss. Only deal damage to the player if their answer is completely incorrect or nonsensical.
+`);
+  }
 
-DIFFICULTY SETTING: ${difficulty.toUpperCase()}
-Evaluate the candidate's answer strictly based on this difficulty setting:
-- EASY: Be highly lenient. Accept basic correct concepts. Overlook minor edge cases. If they show a general understanding, set damageTo to "boss" (damageAmount: 20-50) and damageTo to "player" only for completely incorrect answers.
-- MEDIUM: Standard grading rules. Be fair but thorough. Check for core edge cases.
-- HARD: Be extremely nitpicky, rigorous, and demanding. A correct answer is not enough; it must address advanced edge cases, security, and trade-offs. If they miss even minor edge cases or code flaws, you MUST set damageTo to "player" (damageAmount: 20-50). Only a truly comprehensive, bulletproof answer can deal damage to you (damageTo: "boss").`;
+  let systemPrompt = `You are running an interview simulation at ${difficulty.toUpperCase()} difficulty.
+All evaluation rules, grading criteria, and follow-up question complexity MUST be adjusted to match this difficulty level.
+
+${basePrompt}
+
+=========================================
+DIFFICULTY RULES OVERRIDE (${difficulty.toUpperCase()}):
+- EASY: 
+  - GRADING: Be highly lenient. Accept basic correct concepts. Overlook minor edge cases, concurrency issues, database scaling, or advanced security concerns unless the question explicitly asked for them. If the candidate shows a general understanding, set damageTo to "boss" (damageAmount: 20-50). Only set damageTo to "player" (damageAmount: 20-50) for completely incorrect, nonsensical, or empty answers.
+  - FOLLOW-UP: Ask a simple, conceptual, or basic follow-up question. Do NOT ask them to scale components, design complex architectures, write automated scripts, or handle advanced concurrency/security edge cases.
+- MEDIUM:
+  - GRADING: Standard grading rules. Be fair but thorough. Check for core edge cases. If the candidate's proposed design is generally correct and addresses typical edge cases, set damageTo to "boss" (damageAmount: 15-40). If they miss standard edge cases, fail to address core issues, or introduce noticeable flaws, set damageTo to "player" (damageAmount: 15-40).
+  - FOLLOW-UP: Ask a standard follow-up question about common edge cases, standard implementation trade-offs, or simple refactoring.
+- HARD:
+  - GRADING: Be extremely nitpicky, rigorous, and demanding. A correct answer is not enough; it must address advanced edge cases, security, and trade-offs. If they miss even minor edge cases or code flaws, you MUST set damageTo to "player" (damageAmount: 20-50). Only a truly comprehensive, bulletproof answer can deal damage to you (damageTo: "boss", damageAmount: 20-50).
+  - FOLLOW-UP: Ask a highly challenging follow-up question pushing them to explain scaling limits, race conditions, advanced failure modes, or deep security vulnerabilities.
+
+These DIFFICULTY RULES OVERRIDE override any conflicting instructions or example criteria mentioned in the rules above.`;
+
+  // Inject strict domain restrictions for EASY mode
+  if (difficulty === "easy") {
+    systemPrompt += `\n\nSTRICT INTERVIEWER BOUNDARIES FOR EASY MODE:
+- As the Nitpicking System Architect: Focus only on basic CRUD endpoints, simple database tables, or simple client-server concepts. DO NOT ask about Paxos/Raft consensus, multi-region database sharding, saga design patterns, or distributed queues.
+- As the Chaotic Startup CTO: Focus only on basic code logic, simple unit testing (positive/negative assertions), or standard code style/comments. DO NOT ask about CI/CD pipeline structures, dependency injection containers, or complex architectural refactoring.
+- As the Pedantic Product Manager: Focus only on basic user features, simple user feedback, or basic prioritization. DO NOT ask about statistical significance in A/B tests or complex roadmap dependencies.
+- As the Rigorous QA Lead: Focus only on manual QA topics (defect life-cycle, boundary value testing, bug logging, or priority vs severity). DO NOT ask about automation frameworks, Unicode normalization, ICU libraries, hidden/invisible characters, or performance/load testing.
+
+EASY MODE FOLLOW-UP PROGRESSION:
+If there is a conversation history, build a simple progression. For manual testing, the follow-up flow should proceed naturally along manual QA steps:
+1. Explain basic expected result (e.g. blank inputs) ->
+2. Explain how to log/report the defect ->
+3. Define severity/priority of the bug ->
+4. Detail simple boundary tests (e.g. field length limits).
+Keep the follow-up question short, clear, and strictly entry-level.`;
+  }
 
   if (candidateProfile && typeof candidateProfile === "string" && candidateProfile.trim().length > 0) {
     systemPrompt += `
@@ -269,6 +334,11 @@ The candidate claims to have this specific background:
 "${candidateProfile.trim()}"
 
 You MUST cross-examine their answers against their claimed stack and technologies while strictly preserving your character persona rules. If they say they are an expert in Java, grill them on concurrency or JVM memory. If they claim to know automated testing, attack their validation strategies. Critically evaluate whether their proposed solution aligns with or leverages their background appropriately, or if they are failing to apply their claimed skills.`;
+  }
+
+  const historyText = summarizeBattleLog(battleLog);
+  if (historyText) {
+    systemPrompt += `\n\nCONVERSATION HISTORY (SUMMARIZED):\nUse the following history to understand the context and progress the conversation naturally:\n${historyText}`;
   }
 
   try {
@@ -340,4 +410,129 @@ Do not return any surrounding text, markdown, or code fences.`;
   }
 }
 
-module.exports = { evaluateTurn, generateChallenge, verifyAndExtractResume };
+async function generateReportCard(bossId, battleLog, difficulty = "medium", candidateProfile) {
+  if (!battleLog || !Array.isArray(battleLog) || battleLog.length === 0) {
+    throw new Error("Cannot generate a report card for an empty battle log.");
+  }
+
+  const BOSS_TITLES = {
+    architect: "nitpicking System Architect",
+    cto: "chaotic Startup CTO",
+    pm: "pedantic Product Manager",
+    qa: "rigorous QA Lead"
+  };
+
+  const BOSS_TONES = {
+    architect: "technical, structural, nitpicky, focusing on scalability and SPOFs",
+    cto: "pragmatic, engineering-focused, fast-paced, focusing on code quality and technical debt",
+    pm: "customer-centric, pedantic about MVP scope, roadmap alignment, and business metrics",
+    qa: "rigorous, defensive, focusing on edge cases, safety, vulnerabilities, and reliability"
+  };
+
+  const title = BOSS_TITLES[bossId] || BOSS_TITLES.cto;
+  const tone = BOSS_TONES[bossId] || BOSS_TONES.cto;
+
+  const systemPrompt = `You are the evaluation engine for the Mock Interview Arena.
+The candidate just finished a mock interview combat simulation against the ${title} (difficulty: ${difficulty.toUpperCase()}).
+Candidate's claimed profile/resume summary: "${candidateProfile || 'None provided'}"
+
+Here is the complete dialogue log of the interview:
+${JSON.stringify(battleLog, null, 2)}
+
+Your task is to perform a comprehensive post-game technical evaluation of the candidate's answers and generate a Candidate Feedback Matrix (Technical Report Card).
+
+CRITICAL SKILLS EXTRACTION INSTRUCTIONS:
+- Identify 3-5 key technical skills, tools, or frameworks dynamically based on the candidate's profile/resume and the actual interview rounds. 
+- If no profile was provided, extract them from the core topics tested. 
+- DO NOT output placeholder skills (like Spring Boot, Kafka, System Design, Concurrency) unless they were actually mentioned in the candidate profile or dialogue. For example, if the candidate profile is a Manual Tester, extract manual testing skills (e.g. Manual Testing, Test Cases, Bug Reporting, Regression Testing, etc.).
+
+Analyze the conversation step-by-step and output a valid JSON object matching the following structure:
+{
+  "overallVerdict": {
+    "status": "PASS" | "FAIL",
+    "overallScore": <integer between 0 and 100>,
+    "summary": "<A 3-4 sentence comprehensive performance summary. This summary MUST be written in the voice/persona of the interviewer (${title}), reflecting their unique attitude, tone: ${tone}. It should be constructive yet stay strictly in character.>"
+  },
+  "categories": [
+    {
+      "name": "Technical Accuracy & Logic",
+      "score": <integer 1 to 5>,
+      "maxScore": 5,
+      "feedback": "<Critique of their technical understanding, accuracy of solutions, and correctness of code/algorithms.>",
+      "strengths": ["<strength 1>", "<strength 2>"],
+      "improvements": ["<improvement 1>", "<improvement 2>"]
+    },
+    {
+      "name": "System Scalability & SPOFs",
+      "score": <integer 1 to 5>,
+      "maxScore": 5,
+      "feedback": "<Critique of how well they identified single points of failure, scaling issues, concurrency, or performance bottlenecks.>",
+      "strengths": ["<strength 1>", "<strength 2>"],
+      "improvements": ["<improvement 1>", "<improvement 2>"]
+    },
+    {
+      "name": "Pragmatism & MVP Alignment",
+      "score": <integer 1 to 5>,
+      "maxScore": 5,
+      "feedback": "<Critique of their prioritization, cost/velocity awareness, trade-offs, and keeping focus on core user value.>",
+      "strengths": ["<strength 1>", "<strength 2>"],
+      "improvements": ["<improvement 1>", "<improvement 2>"]
+    },
+    {
+      "name": "Communication & Persona Engagement",
+      "score": <integer 1 to 5>,
+      "maxScore": 5,
+      "feedback": "<Critique of how well they answered the interviewer's specific follow-up questions and engaged with their persona context.>",
+      "strengths": ["<strength 1>", "<strength 2>"],
+      "improvements": ["<improvement 1>", "<improvement 2>"]
+    }
+  ],
+  "skillsMatrix": [
+    {
+      "skill": "<A technical skill, framework, tool, or engineering core competency tested or mentioned in the interview (e.g. Manual Testing, Jest, Load Testing, API Design, Scalability, etc.). DO NOT hardcode Spring Boot, Kafka, or Concurrency unless they actually match the candidate's profile/resume or dialogue rounds.>",
+      "proficiency": "Advanced" | "Intermediate" | "Beginner",
+      "status": "Targeted" | "Untargeted",
+      "comments": "<Short critique of how well they demonstrated or failed to apply this skill relative to their claimed resume/profile and the dialogue history.>"
+    }
+  ],
+  "timelineFeedback": [
+    {
+      "turnIndex": <integer, starting at 1>,
+      "candidateAnswerSummary": "<A short summary of what the candidate answered in 1 sentence.>",
+      "scoreImpact": "<e.g., +10 (Solid scaling strategy) or -15 (Single database SPOF)>",
+      "critique": "<Short 1-2 sentence critique of this specific round's answer.>"
+    }
+  ]
+}
+
+Ensure the output is ONLY a valid JSON object. Do not include markdown code fences, trailing commas, or any other extra text.`;
+
+  try {
+    const raw = await getCompletion(systemPrompt, "Please generate the report card JSON now.");
+    const cleaned = stripMarkdown(raw);
+    const firstBrace = cleaned.indexOf("{");
+    const lastBrace = cleaned.lastIndexOf("}");
+    let jsonStr = null;
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      jsonStr = cleaned.substring(firstBrace, lastBrace + 1);
+    }
+    if (!jsonStr) {
+      throw new Error("Failed to parse report card JSON from LLM response.");
+    }
+    const report = JSON.parse(jsonStr);
+
+    // Normalize turnIndex in timelineFeedback to be strictly sequential (1, 2, 3...)
+    if (report && Array.isArray(report.timelineFeedback)) {
+      report.timelineFeedback.forEach((tf, index) => {
+        tf.turnIndex = index + 1;
+      });
+    }
+
+    return report;
+  } catch (error) {
+    console.error("generateReportCard error:", error.message);
+    throw error;
+  }
+}
+
+module.exports = { evaluateTurn, generateChallenge, verifyAndExtractResume, generateReportCard };

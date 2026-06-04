@@ -13,6 +13,8 @@ export const initialState = {
   currentChallenge: null,
   difficulty: 'medium',
   candidateProfile: '',
+  reportCard: null,
+  isGeneratingReport: false,
 };
 
 export function gameReducer(state, action) {
@@ -84,6 +86,26 @@ export function gameReducer(state, action) {
           : state.battleLog,
       };
 
+    case 'GENERATE_REPORT_START':
+      return {
+        ...state,
+        isGeneratingReport: true,
+      };
+
+    case 'GENERATE_REPORT_SUCCESS':
+      return {
+        ...state,
+        isGeneratingReport: false,
+        reportCard: action.payload,
+      };
+
+    case 'GENERATE_REPORT_FAILURE':
+      return {
+        ...state,
+        isGeneratingReport: false,
+        reportCard: null,
+      };
+
     default:
       return state;
   }
@@ -134,6 +156,7 @@ export function GameProvider({ children }) {
           userResponse: userAnswer,
           difficulty: gameState.difficulty,
           candidateProfile: gameState.candidateProfile,
+          battleLog: gameState.battleLog,
         }),
         signal: controller.signal,
       });
@@ -159,13 +182,39 @@ export function GameProvider({ children }) {
         type: 'SET_ERROR',
         errorLogEntry: {
           sender: 'boss',
-          text: '[System Connection Error: The arena communication array fluctuated. Re-submit your answer.]',
+          text: '[System Error: The backend server is unreachable.]',
         },
       });
     }
   }, [gameState.selectedBoss, gameState.difficulty]);
 
-  const value = { gameState, dispatchTurn, dispatch };
+  const fetchReportCard = useCallback(async (bossId, battleLog, difficulty, candidateProfile) => {
+    dispatch({ type: 'GENERATE_REPORT_START' });
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/battle/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bossId,
+          battleLog,
+          difficulty,
+          candidateProfile,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Report API responded with ${response.status}`);
+      }
+
+      const data = await response.json();
+      dispatch({ type: 'GENERATE_REPORT_SUCCESS', payload: data });
+    } catch (err) {
+      console.error("fetchReportCard error:", err);
+      dispatch({ type: 'GENERATE_REPORT_FAILURE' });
+    }
+  }, []);
+
+  const value = { gameState, dispatchTurn, fetchReportCard, dispatch };
 
   return (
     <GameContext.Provider value={value}>

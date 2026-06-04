@@ -12,6 +12,9 @@ describe('GameContext - gameReducer State Transitions', () => {
       isProcessing: false,
       currentChallenge: null,
       difficulty: 'medium',
+      candidateProfile: '',
+      reportCard: null,
+      isGeneratingReport: false,
     });
   });
 

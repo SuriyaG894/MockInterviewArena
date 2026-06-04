@@ -37,7 +37,7 @@ const multer = require("multer");
 const pdfParse = require("pdf-parse");
 const mammoth = require("mammoth");
 
-const { evaluateTurn, generateChallenge, verifyAndExtractResume } = require("./agent");
+const { evaluateTurn, generateChallenge, verifyAndExtractResume, generateReportCard } = require("./agent");
 
 const app = express();
 
@@ -137,7 +137,7 @@ app.post("/api/battle/start", async (req, res) => {
 
 app.post("/api/battle/turn", async (req, res) => {
   try {
-    const { bossId, userResponse, difficulty, candidateProfile } = req.body;
+    const { bossId, userResponse, difficulty, candidateProfile, battleLog } = req.body;
 
     if (!bossId || !userResponse) {
       return res.status(400).json({
@@ -145,7 +145,7 @@ app.post("/api/battle/turn", async (req, res) => {
       });
     }
 
-    const result = await evaluateTurn(bossId, userResponse, difficulty || "medium", candidateProfile);
+    const result = await evaluateTurn(bossId, userResponse, difficulty || "medium", candidateProfile, battleLog);
     res.json(result);
   } catch (error) {
     console.error("Battle turn error:", error.message);
@@ -153,6 +153,26 @@ app.post("/api/battle/turn", async (req, res) => {
       dialogue: "The arena processors falter. Try again.",
       damageTo: "none",
       damageAmount: 0,
+    });
+  }
+});
+
+app.post("/api/battle/report", async (req, res) => {
+  try {
+    const { bossId, battleLog, difficulty, candidateProfile } = req.body;
+
+    if (!bossId || !battleLog || !Array.isArray(battleLog)) {
+      return res.status(400).json({
+        error: "bossId and battleLog are required",
+      });
+    }
+
+    const report = await generateReportCard(bossId, battleLog, difficulty || "medium", candidateProfile);
+    res.json(report);
+  } catch (error) {
+    console.error("Battle report error:", error.message);
+    res.status(500).json({
+      error: "Failed to generate candidate evaluation report card",
     });
   }
 });
