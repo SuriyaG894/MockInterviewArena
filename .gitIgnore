@@ -16,3 +16,12 @@ package.json
 playwright.config.js
 docs
 scratch
+frontend/videos
+frontend/playwright
+scripts
+videos
+skills-lock.json
+# Graphify & Agents
+graphify-out/
+.agents/
+

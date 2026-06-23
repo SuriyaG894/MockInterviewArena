@@ -7,6 +7,9 @@
     "dev": "echo 'Run npm run dev:frontend and npm run dev:backend in separate terminals'"
   },
   "devDependencies": {
-    "@playwright/test": "^1.60.0"
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "@playwright/test": "^1.60.0",
+    "fluent-ffmpeg": "^2.1.3"
   }
 }
