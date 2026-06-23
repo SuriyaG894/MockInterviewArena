@@ -10,7 +10,9 @@ Mock Interview Arena is an interactive interview practice simulator where you se
 
 ### Prerequisites
 - **Node.js** v18+ and **npm** v9+
-- An LLM API key (Groq recommended for free tier)
+- **LLM Provider** (choose one):
+  - **Groq** API key (recommended for free tier) – [Get here](https://console.groq.com)
+  - **Azure AI Agents** connection string – [Get here](https://portal.azure.com)
 - Git
 
 ### 30-Second Setup
